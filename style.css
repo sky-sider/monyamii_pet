@@ -592,3 +592,27 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background-im
     min-width:0;
   }
 }
+
+
+/* v26 mobile notes fix: 思い出タブで横幅が広がり、下部ナビが崩れる問題を修正 */
+@media(max-width:649px){
+  .app-pages{grid-template-columns:minmax(0,1fr);}
+  .app-page{min-width:0;width:100%;}
+  #page-notes,
+  #page-notes .bottom-panel,
+  #page-notes .place-journal,
+  #page-notes .place-journal-entries,
+  #page-notes .journal-entry,
+  #page-notes .log{min-width:0;max-width:100%;}
+  #page-notes .page-heading > div:last-child{min-width:0;}
+  #page-notes .journal-heading{flex-wrap:wrap;align-items:flex-start;}
+  #page-notes .journal-heading span,
+  #page-notes #discoveryCount{max-width:100%;}
+  #page-notes .journal-tabs{max-width:100%;}
+  #page-notes .journal-intro,
+  #page-notes .journal-help,
+  #page-notes .journal-entry-title,
+  #page-notes .journal-entry-text,
+  #page-notes .journal-entry-note,
+  #page-notes #discoveryText{overflow-wrap:anywhere;word-break:break-word;}
+}
