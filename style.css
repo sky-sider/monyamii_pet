@@ -240,3 +240,28 @@ footer{padding-top:18px;line-height:1.7}
 @media(prefers-reduced-motion:reduce){#strokePetBtn.petting-request-active{animation:none}}
 /* 吹き出しや天気ラベルがペットへのタップを邪魔しないようにする */
 .room-scene .thought,.room-scene .weather-label,.room-scene .room-caption{pointer-events:none}
+
+/* v16: おさんぽ。既存の4タブはそのまま維持。 */
+.walk-launcher,.walk-session{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:19px;padding:16px;box-shadow:0 3px 16px #4b41340b}
+.walk-launcher{margin-top:14px}.walk-launcher h2{font-size:16px}.walk-guide{font-size:12px;line-height:1.65;color:var(--muted);margin:4px 0 14px}
+.walk-destinations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.walk-destinations button{display:flex;flex-direction:column;gap:4px;padding:6px 5px 10px;background:#fcf8f1;border:1px solid #e5d9c7;color:var(--ink);border-radius:13px;text-align:center;cursor:pointer;min-width:0}
+.walk-destinations img{width:100%;aspect-ratio:8/5;object-fit:cover;border-radius:7px;image-rendering:pixelated}
+.walk-destinations strong{font-size:12px}.walk-destinations span{font-size:10px;color:var(--muted)}
+.walk-destinations button:hover,.walk-targets button:hover{background:#ecf2e7}
+.walk-collection{font-size:11px;line-height:1.75;background:#f4f0e7;border-radius:11px;padding:9px 11px;color:#777062;margin-top:12px}
+.walk-session[hidden],.walk-launcher[hidden]{display:none!important}
+#page-home.walk-active>.room-card,#page-home.walk-active>.pet-panel,#page-home.walk-active>.today-panel{display:none}
+.walk-session{margin-top:0;padding:14px}.walk-header{display:flex;justify-content:space-between;align-items:center;gap:8px}.walk-header h2{font-size:20px}.walk-header .quiet-button{padding:10px 9px;white-space:nowrap;min-height:42px}
+.walk-weather{font-size:11px;color:#827464;padding:7px 2px 10px}.walk-scene{border:1px solid #d6c6b1;border-radius:12px;overflow:hidden;background:#d2e3d5 center/100% 100% no-repeat;aspect-ratio:8/5;image-rendering:pixelated;position:relative}
+.walk-scene canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:manipulation;cursor:pointer}
+.walk-narration{padding:13px 12px;background:#f4efe5;border:1px solid #e9dfd0;border-radius:11px;min-height:64px;line-height:1.7;font-size:13px;color:#675f50;margin:12px 0}
+.walk-targets-label{font-size:12px;font-weight:800;color:#716450;margin:7px 0}.walk-targets-label span{display:block;font-weight:400;color:var(--muted);font-size:10px;margin-top:4px}
+.walk-targets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.walk-targets button{min-height:48px;border:1px solid #e4d9c8;border-radius:12px;background:#fcf9f2;text-align:left;padding:9px 11px;color:#63594e;font-weight:700;font-size:12px}
+.walk-targets button:disabled{opacity:.55;cursor:wait}
+.walk-targets button:focus-visible,.walk-destinations button:focus-visible,#walkCanvas:focus-visible{outline:3px solid #7b9a79;outline-offset:2px}
+.walk-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.walk-actions button{min-height:47px;background:#eff3eb;border-color:#d8e3d5;font-weight:800}
+.walk-help{font-size:11px;color:var(--muted);line-height:1.7;margin:10px 0 0}
+@media (max-width:375px){.walk-destinations strong{font-size:11px}.walk-destinations span{font-size:9px}.walk-session{padding:10px}.walk-targets button{font-size:11px}}
+@media (min-width:650px){.walk-session,.walk-launcher{padding:20px}.walk-destinations{gap:14px}.walk-destinations strong{font-size:14px}}
