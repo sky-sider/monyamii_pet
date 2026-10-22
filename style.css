@@ -357,3 +357,238 @@ footer{padding-top:18px;line-height:1.7}
 @media(min-width:650px){
   .mobile-page-switcher,.mobile-page-switcher-help{display:none!important}
 }
+
+
+/* v24: かわいい統一デザイン */
+
+:root{
+  --bg-a:#fff7f4;
+  --bg-b:#fdf9ef;
+  --bg-c:#f6fbf3;
+  --card:#fffdf9;
+  --ink:#6f5b55;
+  --line:#ead9d4;
+  --accent:#f4c7cd;
+  --accent-strong:#e9a7b4;
+  --mint:#dcecd7;
+  --yellow:#f7e7a8;
+  --peach:#fbe2d2;
+}
+html,body{background:radial-gradient(circle at top left,#fff0f4 0,#fff7f6 28%,#fbf9f1 58%,#f4fbf5 100%);color:var(--ink)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.75) 1px,transparent 1px);background-size:16px 16px;opacity:.16}
+.app{max-width:1180px}
+.brand-heading{display:flex;flex-direction:column;gap:3px}
+.brand-note{margin:0;color:#a48c86;font-size:12px;line-height:1.5}
+.topbar{background:linear-gradient(180deg,rgba(255,249,246,.95),rgba(255,249,246,.85));border:1px solid #f0dfd9;border-radius:24px;padding:14px 16px 12px;box-shadow:0 8px 28px rgba(162,124,123,.09)}
+.header-quick-actions{align-items:center}
+.point-shortcut{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#fffef9,#fff6e8);border:1px solid #edd8be;border-radius:999px;padding:8px 12px;box-shadow:0 4px 10px rgba(180,146,113,.08)}
+.shortcut-icon{width:24px;height:24px;object-fit:contain}
+.app-navigation{border:1px solid #efdeda;background:rgba(255,251,247,.88)!important;box-shadow:0 8px 28px rgba(171,139,129,.09);border-radius:22px;padding:8px}
+.nav-tab{border-radius:18px;padding:10px 10px;color:#8b736d;gap:9px}
+.nav-tab .nav-icon{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fffefb,#fff3f0);border:1px solid #f0ded9;border-radius:12px;box-shadow:0 2px 7px rgba(172,146,137,.08)}
+.nav-tab .nav-icon img{width:24px;height:24px;object-fit:contain}
+.nav-tab[aria-selected="true"]{background:linear-gradient(180deg,#fffefc,#fff6f3);color:#7a615c;border-color:#f0ddd6;box-shadow:0 6px 18px rgba(171,139,129,.12)}
+.nav-tab[aria-selected="true"] .nav-icon{background:linear-gradient(180deg,#fffdf4,#ffeef2);transform:translateY(-1px)}
+.page-heading{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,#fffefc,#fff8f2);border:1px solid #f1dfd6;border-radius:24px;padding:14px 16px;box-shadow:0 7px 22px rgba(177,146,137,.08)}
+.page-heading-icon{width:68px;height:68px;border-radius:20px;background:linear-gradient(180deg,#fffefc,#fff2ed);border:1px solid #f1ddd5;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.page-heading-icon img{width:56px;height:56px;object-fit:contain}
+.page-heading h2{margin:2px 0 3px;font-size:26px}
+.page-heading-note{margin:0;color:#9d857e;font-size:12px;line-height:1.65}
+.home-only-heading{margin-bottom:10px}
+.room-card,.pet-panel,.bottom-panel,.item-panel,.theme-panel,.wardrobe-panel,.favorite-panel,.room-history,.memory-panel,.secret-panel,.today-panel,.walk-launcher,.walk-session,.personality-panel,.petting-memory-panel{border:1px solid #eeddd7;background:linear-gradient(180deg,#fffefc,#fffaf6);box-shadow:0 8px 26px rgba(177,146,137,.08)}
+.section-heading h2,.walk-launcher h2,.walk-header h2{color:#7e6660}
+.section-heading span,.weather-disclosure summary strong,.walk-weather,.walk-collection,.signal,.favorite-entry,.memory-entry,.today-panel .text-route{background:#fff6f2}
+.signal{border:1px solid #f0dfd9}
+.icon-button,.quiet-button,.action-button,.primary-button,.mobile-page-chip,.wardrobe-filter,.item-choice,.theme-option{transition:transform .12s ease, box-shadow .16s ease, background .16s ease}
+.icon-button,.quiet-button,.mobile-page-chip,.wardrobe-filter,.theme-option{background:linear-gradient(180deg,#fffefc,#fff7f1);border-color:#efdcd5;box-shadow:0 3px 8px rgba(171,139,129,.06)}
+.icon-button:hover,.quiet-button:hover,.mobile-page-chip:hover,.wardrobe-filter:hover,.theme-option:hover,.item-choice:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(171,139,129,.12)}
+.action-button{background:linear-gradient(180deg,#fffefc,#fff6f4);border-color:#efd7d9;min-height:88px;gap:7px;box-shadow:0 6px 16px rgba(174,138,130,.08)}
+.action-illustration{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(255,255,255,.9))}
+.inline-mini-icon{width:18px;height:18px;object-fit:contain;vertical-align:-3px;margin-right:4px}
+.mobile-page-switcher{background:transparent}
+.mobile-page-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px 8px 8px;background:linear-gradient(180deg,#fffdfb,#fff7f2);border-color:#f0ddd6}
+.mobile-page-chip.is-active,.mobile-page-chip[aria-selected="true"]{background:linear-gradient(180deg,#fffdfc,#fff1f4)!important;border-color:#efcad4!important;color:#7d6560}
+.chip-illustration{width:28px;height:28px;object-fit:contain;flex:0 0 auto}
+.room-scene,.walk-scene{border-radius:18px 18px 12px 12px;overflow:hidden}
+.room-tools,.walk-actions,.social-request-controls{gap:10px}
+.social-request-panel{border:1px dashed #eacfd7;background:linear-gradient(180deg,#fff8fb,#fffdf8);border-radius:18px;padding:14px}
+.social-request-head{display:flex;align-items:center;gap:10px}
+.social-request-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:14px;background:#fff0f4;color:#d78395;font-size:20px}
+.today-panel-cute{position:relative;overflow:hidden}
+.today-sticker{position:absolute;right:12px;top:12px;width:72px;height:72px;opacity:.95}
+.today-sticker img{width:100%;height:100%;object-fit:contain}
+.today-panel #todayHighlight{padding-right:78px}
+.weather-disclosure summary,.theme-option,.item-choice,.headwear-card,.journal-entry,.favorite-entry,.memory-entry,.personality-entry,.petting-memory-entry,.secret-entry{background:linear-gradient(180deg,#fffefc,#fff9f5)}
+.headwear-card{border:1px solid #f0ddd6;box-shadow:0 4px 10px rgba(175,142,133,.06)}
+.wardrobe-wallet,.point-bank-card{background:linear-gradient(180deg,#fff9eb,#fffef8)}
+.item-choice.is-active,.theme-option.is-active,.wardrobe-filter.is-active{background:linear-gradient(180deg,#fff6f8,#fffdf8);border-color:#efcad4;color:#7d6560}
+.text-route{display:inline-flex;align-items:center;gap:4px;background:#fff8f6;border-radius:999px;padding:6px 10px;border:1px solid #f0ddd6}
+@media(min-width:900px){
+  .app{padding:26px 28px 72px}
+  .topbar{padding:18px 22px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+  .app-navigation{margin-top:16px;padding:10px 12px}
+  .nav-tab{padding:12px 14px;font-size:15px}
+  #page-home{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:16px;align-items:start}
+  #page-home>.page-heading{grid-column:1 / -1}
+  #page-home>.room-card{grid-column:1;grid-row:2 / span 2}
+  #page-home>.pet-panel{grid-column:2;grid-row:2}
+  #page-home>.today-panel{grid-column:2;grid-row:3}
+  #page-home>.walk-launcher,#page-home>.walk-session{grid-column:1 / -1;grid-row:4}
+  #page-room{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.95fr);gap:16px;align-items:start}
+  #page-room>.page-heading{grid-column:1 / -1}
+  #page-room>.theme-panel{grid-column:1;grid-row:2}
+  #page-room>.item-panel{grid-column:1;grid-row:3}
+  #page-room>.room-history{grid-column:2;grid-row:2 / span 2}
+  #page-fashion{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+  #page-notes{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:16px;align-items:start}
+  #page-notes>.page-heading{grid-column:1 / -1}
+  #page-notes>.favorite-panel,#page-notes>.memory-panel,#page-notes>.petting-memory-panel,#page-notes>.secret-panel{grid-column:1}
+  #page-notes>.personality-panel,#page-notes>.bottom-panel{grid-column:2}
+  .walk-destinations{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .walk-destinations button{padding:10px;text-align:left}
+  .walk-destinations button img{border-radius:16px}
+}
+@media(max-width:649px){
+  .brand-note{display:none}
+  .topbar{border-radius:20px;padding:12px 12px 10px}
+  .app-navigation{padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important;background:rgba(255,250,246,.97)!important}
+  .nav-tab .nav-icon{width:28px;height:28px;border-radius:10px}
+  .nav-tab .nav-icon img{width:21px;height:21px}
+  .page-heading{padding:12px 13px;border-radius:20px}
+  .page-heading-icon{width:54px;height:54px;border-radius:16px}
+  .page-heading-icon img{width:46px;height:46px}
+  .page-heading h2{font-size:22px}
+  .page-heading-note{font-size:11px}
+  .home-only-heading{margin-bottom:8px}
+  .today-sticker{width:60px;height:60px;top:10px;right:10px}
+  .today-panel #todayHighlight{padding-right:56px}
+  .action-illustration{width:34px;height:34px}
+  .actions{gap:10px}
+  .action-button{min-height:82px}
+}
+
+
+/* v24 fixed: UIアイコンの崩れ修正 */
+
+.nav-tab .nav-icon,
+.page-heading-icon,
+.mobile-page-chip,
+.action-button,
+.text-route,
+.point-shortcut{overflow:hidden}
+.nav-tab .nav-icon img,
+.page-heading-icon img,
+.chip-illustration,
+.action-illustration,
+.shortcut-icon,
+.inline-mini-icon,
+.today-sticker img{
+  display:block;
+  object-fit:contain;
+  object-position:center center;
+}
+.shortcut-icon{width:22px;height:22px;flex:0 0 auto}
+.nav-tab .nav-icon{flex:0 0 auto}
+.nav-tab .nav-icon img{width:22px;height:22px}
+.page-heading-icon img{width:50px;height:50px}
+.chip-illustration{width:24px;height:24px}
+.action-illustration{width:34px;height:34px;flex:0 0 auto}
+.inline-mini-icon{width:16px;height:16px;flex:0 0 auto}
+.text-route{white-space:nowrap;line-height:1.2}
+.today-sticker{display:flex;align-items:center;justify-content:center}
+.today-sticker img{width:88%;height:88%}
+.section-heading,.social-request-head,.walk-header{align-items:center}
+@media(min-width:900px){
+  .nav-tab .nav-icon img{width:21px;height:21px}
+  .page-heading-icon img{width:48px;height:48px}
+  .action-illustration{width:32px;height:32px}
+}
+@media(max-width:649px){
+  .shortcut-icon{width:20px;height:20px}
+  .nav-tab .nav-icon img{width:18px;height:18px}
+  .page-heading-icon img{width:40px;height:40px}
+  .chip-illustration{width:22px;height:22px}
+  .action-illustration{width:30px;height:30px}
+  .today-sticker img{width:84%;height:84%}
+}
+
+
+/* v24 fixed2: 今日のひとことの重なり画像を削除 */
+.today-panel #todayHighlight{padding-right:0 !important;}
+.today-panel .text-route{position:relative; z-index:1;}
+
+
+/* v25 — 16個の独立した手描き風アイコン。操作領域は画像に重ねない。 */
+.nav-tab .nav-icon,.page-heading-icon{overflow:visible}
+.nav-tab .nav-icon img,.page-heading-icon img,.chip-illustration,.action-illustration,
+.shortcut-icon,.inline-mini-icon{display:block;object-fit:contain;object-position:center;flex-shrink:0}
+.nav-tab .nav-icon img{width:26px;height:26px}
+.page-heading-icon img{width:55px;height:55px}
+.chip-illustration{width:28px;height:28px}
+.action-illustration{width:40px;height:40px}
+.shortcut-icon{width:26px;height:26px}
+.inline-mini-icon{width:19px;height:19px}
+.action-button{min-height:90px}
+.today-panel .text-route,.text-route{position:relative;z-index:2;min-height:42px;padding:8px 12px;display:inline-flex;align-items:center;gap:4px}
+.today-panel #todayHighlight{padding-right:0!important}
+@media(max-width:649px){
+  .nav-tab .nav-icon img{width:23px;height:23px}
+  .page-heading-icon img{width:46px;height:46px}
+  .chip-illustration{width:25px;height:25px}
+  .action-illustration{width:35px;height:35px}
+  .action-button{min-height:83px}
+  .shortcut-icon{width:23px;height:23px}
+}
+
+
+/* v25 notes fix: PC版ノート画面の2カラム整理 */
+@media(min-width:900px){
+  #page-notes{display:grid;grid-template-columns:minmax(0,.92fr) minmax(360px,1.08fr);gap:18px;align-items:start}
+  #page-notes>.page-heading{grid-column:1 / -1}
+  #page-notes>.favorite-panel,
+  #page-notes>.memory-panel,
+  #page-notes>.petting-memory-panel,
+  #page-notes>.secret-panel,
+  #page-notes>.personality-panel{grid-column:1}
+  #page-notes>.bottom-panel{grid-column:2;grid-row:2;align-self:start;position:sticky;top:20px}
+}
+
+
+/* v25 ノートの縦位置修正:
+   左の5カードを一つの縦列として扱い、右のノートの高さに影響されないようにする。 */
+.notes-left-column{display:contents}
+@media(min-width:900px){
+  #page-notes{
+    display:grid;
+    grid-template-columns:minmax(0,.92fr) minmax(360px,1.08fr);
+    grid-template-rows:auto auto;
+    align-items:start;
+    column-gap:18px;
+    row-gap:16px;
+  }
+  #page-notes>.page-heading{grid-column:1 / -1;grid-row:1}
+  #page-notes>.notes-left-column{
+    grid-column:1;
+    grid-row:2;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width:0;
+    align-self:start;
+  }
+  #page-notes>.notes-left-column>section{
+    flex:0 0 auto;
+    width:100%;
+    min-width:0;
+    margin:0;
+  }
+  #page-notes>.bottom-panel{
+    grid-column:2;
+    grid-row:2;
+    align-self:start;
+    position:static;
+    top:auto;
+    margin:0;
+    min-width:0;
+  }
+}
