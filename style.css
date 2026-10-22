@@ -616,3 +616,42 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background-im
   #page-notes .journal-entry-note,
   #page-notes #discoveryText{overflow-wrap:anywhere;word-break:break-word;}
 }
+
+
+/* v27: スマホ「いっしょ」のおへや・おさんぽ2タブ */
+@media(max-width:649px){
+  /* 同じ画面に部屋・ふれあい・ひとことをまとめて表示。 */
+  #page-home > .mobile-page-switcher[data-mobile-group="home"]{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    overflow:visible;
+    min-width:0;
+    width:100%;
+  }
+  #page-home > .mobile-page-switcher[data-mobile-group="home"] .mobile-page-chip{
+    width:100%;
+    min-width:0;
+    justify-content:center;
+    min-height:44px;
+    padding:8px 10px;
+  }
+  #page-home > .room-card,
+  #page-home > .pet-panel,
+  #page-home > .today-panel{min-width:0;max-width:100%;}
+  /* 表示順: 部屋の風景 → ふれあい → 今日のひとこと。 */
+  #page-home > .pet-panel,
+  #page-home > .today-panel{margin-top:12px;}
+  /* ふれあいボタンを画面下部に重ねず、スクロールしても誤操作しにくくする。 */
+  #page-home > .pet-panel .actions{
+    position:static;
+    bottom:auto;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    background:transparent;
+    margin:12px 0 0;
+    padding:0;
+  }
+  #page-home > .pet-panel .action-button{min-width:0;min-height:78px;}
+  #page-home > .pet-panel .signals{margin:12px 0;}
+  #page-home > .today-panel{margin-bottom:4px;}
+}
