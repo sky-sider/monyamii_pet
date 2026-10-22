@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#f4ead9" name="theme-color"/>
-<title>ちいさな同居人 | いっしょにおさんぽ v16</title>
+<title>ちいさな同居人 | お散歩の小さな発見 v20</title>
 <link href="style.css" rel="stylesheet"/>
 <script defer="" src="script.js"></script>
 </head>
@@ -61,8 +61,9 @@
 <p class="walk-narration" id="walkNarration" aria-live="polite">今日はどんなことに出会えるでしょう？</p>
 <div class="walk-targets-label">気になるところへ誘ってみる <span>誘いに応じない日もあります</span></div>
 <div class="walk-targets" id="walkTargets"></div>
+<p class="walk-impression" id="walkImpression" aria-live="polite">何が気になるのでしょう？</p>
 <div class="walk-actions"><button id="walkPetBtn" class="quiet-button" type="button">♡ そっとなでる</button><button id="walkObserveBtn" class="quiet-button" type="button">☼ 見守る</button></div>
-<p class="walk-help" id="walkHelp">何も操作しなくても、この子は自分で探索します。いつでも帰宅できます。</p>
+<p class="walk-help" id="walkHelp">探索先での仕草は性格・天気・経験で変わります。タップで誘うこともでき、いつでも帰宅できます。</p>
 </section>
 <section aria-label="ペットのいる部屋" class="room-card">
 <div class="room-scene" id="roomScene">
@@ -113,16 +114,11 @@
 <button aria-pressed="false" class="theme-choice" data-room-theme="cyber" type="button"><img alt="" loading="lazy" src="assets/rooms/cyber.png"/><span>🌙 サイバー</span></button>
 </div>
 <p class="theme-status" id="roomThemeStatus" role="status">好きなおへやを選んでください。</p></section><section aria-label="部屋に置くおもちゃと家具" class="item-panel">
-<div class="section-heading"><h2>おへやのもの</h2><span>タップして配置</span></div>
+<div class="section-heading"><h2>おへやのもの</h2><span id="roomItemCount">配置中 2/6個</span></div>
 <p class="item-help" id="placeHint">置きたいアイテムを選ぶと、ペットのいる画面に戻ります。床をタップして場所を決めてください。</p>
-<div class="item-tray" id="itemTray">
-<button aria-pressed="false" class="item-choice" data-place-item="ball"><img alt="" src="assets/items/ball.png"/><span class="item-name">毛糸玉</span><span class="item-sub">配置済み</span></button>
-<button aria-pressed="false" class="item-choice" data-place-item="cushion"><img alt="" src="assets/items/cushion.png"/><span class="item-name">クッション</span><span class="item-sub">配置済み</span></button>
-<button aria-pressed="false" class="item-choice" data-place-item="pebble"><img alt="" src="assets/items/pebble.png"/><span class="item-name">きらきら小石</span><span class="item-sub">部屋に置く</span></button>
-<button aria-pressed="false" class="item-choice" data-place-item="plant"><img alt="" src="assets/items/plant.png"/><span class="item-name">鉢植え</span><span class="item-sub">部屋に置く</span></button>
-</div>
+<div class="item-tray" id="itemTray"></div>
 <button class="quiet-button cancel-place" hidden="" id="cancelPlaceBtn">配置をやめる</button>
-<p class="item-footnote">好きなものは、教えてくれません。そっと様子を観察してみましょう。</p>
+<p class="item-footnote">最大6個まで配置できます。入れ替えるときは「しまう」。収納しても、この子が覚えた好みは消えません。</p>
 </section><section aria-label="部屋に残された暮らしの痕跡" class="room-history">
 <div class="section-heading"><h2>おへやの気配</h2><span>小さな変化</span></div>
 <p aria-live="polite" class="room-history-text" id="roomTraceText">静かな部屋です。どんな変化が残るでしょう？</p>
@@ -159,12 +155,16 @@
 <div class="section-heading"><h2>この子だけのひみつ</h2><span>観察して発見</span></div>
 <p id="secretHabitText">いつか、この子だけの不思議な癖が見つかるかもしれません。</p>
 <p class="secret-footnote">何もしない時間にも、新しい行動が現れることがあります。小石やクッションを置くと見られる癖もあります。</p>
+</section><section class="personality-panel" aria-label="観察してわかったこの子らしさ">
+<div class="section-heading"><h2>この子らしさ</h2><span>行動から知る個性</span></div>
+<div id="personalityHint" class="personality-hints" aria-live="polite">まだこの子のことを観察しているところです。</div>
+<p class="personality-note">性格を決めつける診断ではなく、何度か見られた行動からの小さな気づきです。隠れた数値は表示しません。</p>
 </section><section class="bottom-panel" id="discoveryNotebook">
 <div class="section-heading"><h2>発見ノート</h2><span id="discoveryCount">0件</span></div>
 <p id="discoveryText">ペットの行動を観察すると、少しずつこの子のことがわかります。</p>
 <div aria-label="ペットの暮らしと交流の思い出" class="place-journal">
 <div class="journal-heading"><h3>暮らしと思い出</h3><span>その子だけの記録</span></div>
-<p class="journal-intro" id="placeJournalIntro">居場所・交流だけでなく、天気やおへやをきっかけに見せた行動も記録します。</p>
+<p class="journal-intro" id="placeJournalIntro">居場所・交流・お散歩・珍しい仕草を、実際に観察した日時で記録します。</p>
 <div aria-label="思い出の種類を選ぶ" class="journal-tabs" id="journalCategoryTabs" role="group"></div>
 <div aria-label="思い出を見る場所" class="journal-tabs journal-place-tabs" hidden="" id="placeJournalTabs" role="group"></div>
 <ol class="place-journal-entries" id="placeJournalEntries"></ol>
