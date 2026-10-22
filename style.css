@@ -261,7 +261,27 @@ footer{padding-top:18px;line-height:1.7}
 .walk-targets button{min-height:48px;border:1px solid #e4d9c8;border-radius:12px;background:#fcf9f2;text-align:left;padding:9px 11px;color:#63594e;font-weight:700;font-size:12px}
 .walk-targets button:disabled{opacity:.55;cursor:wait}
 .walk-targets button:focus-visible,.walk-destinations button:focus-visible,#walkCanvas:focus-visible{outline:3px solid #7b9a79;outline-offset:2px}
+.walk-impression{margin:11px 0 3px;padding:11px 12px;border-left:3px solid #b9c8a8;background:#f5f4ea;border-radius:3px 10px 10px 3px;color:#696456;font-size:12px;line-height:1.7}
 .walk-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.walk-actions button{min-height:47px;background:#eff3eb;border-color:#d8e3d5;font-weight:800}
 .walk-help{font-size:11px;color:var(--muted);line-height:1.7;margin:10px 0 0}
 @media (max-width:375px){.walk-destinations strong{font-size:11px}.walk-destinations span{font-size:9px}.walk-session{padding:10px}.walk-targets button{font-size:11px}}
 @media (min-width:650px){.walk-session,.walk-launcher{padding:20px}.walk-destinations{gap:14px}.walk-destinations strong{font-size:14px}}
+
+/* v18 — ノートだけに置く、行動から見つけた個性の記録 */
+.personality-panel{margin-top:13px;padding:16px 17px;background:#fffdf6;border:1px solid #e5d8c5;border-radius:18px;box-shadow:0 3px 16px #4b413409}
+.personality-hints p{font-size:13px;line-height:1.65;color:#635d54;margin:8px 0;padding:9px 10px;background:#f4f1e8;border-radius:10px}
+.personality-hints strong{color:#5c765e}
+.personality-hints:not(:has(p)){font-size:13px;color:#776c60;line-height:1.7}
+.personality-note{margin:10px 0 0;font-size:11px;color:#897e71;line-height:1.7}
+@media(min-width:650px){.personality-panel{padding:21px}}
+
+/* v19: 収納できる12種類のドット絵家具。小画面は2列ずつ見やすく配置 */
+.item-tray{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.item-slot{min-width:0;display:flex;flex-direction:column;gap:4px;position:relative}
+.item-slot .item-choice{width:100%;flex:1;min-height:103px}
+.item-slot .item-choice:disabled{opacity:.58;cursor:not-allowed}
+.item-store{border:1px solid #e3d7c7;background:#fbf4eb;border-radius:8px;color:#796b5a;min-height:31px;padding:5px 8px;font-size:11px}
+.item-store[hidden]{display:none}
+.item-store:focus-visible{outline:3px solid #82977b;outline-offset:2px}
+@media(min-width:600px){.item-tray{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:360px){.item-tray{gap:7px}.item-slot .item-choice{min-height:96px}}
