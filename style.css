@@ -146,3 +146,84 @@ body.intro-active{overflow:hidden}
 .wardrobe-footnote{font-size:11px;line-height:1.6;color:var(--muted);margin:12px 0 0}
 @media(min-width:600px){.wardrobe-panel{padding:22px}.headwear-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.headwear-card{grid-template-columns:1fr;text-align:center;justify-items:center;padding:9px 6px}.headwear-details{text-align:center}.headwear-action{width:100%}.headwear-card.equipped{padding:8px 5px}.headwear-card .headwear-icon{width:54px;height:46px}}
 @media(max-width:370px){.wardrobe-wallet{padding:10px;gap:8px}.wallet-note{font-size:10px}.headwear-card{grid-template-columns:40px 1fr;gap:4px 6px;padding:7px 5px}.headwear-card .headwear-icon{width:39px;height:39px}.headwear-name{font-size:11px}}
+
+/* v13: 装飾の好みと「自分で選ぶ」設定。数値は非公開。 */
+.fashion-habit{margin-top:14px;background:#f6f1e8;border:1px solid #e7ddcd;border-radius:15px;padding:12px 14px}
+.fashion-habit-title{font-size:12px;font-weight:800;color:#756450;margin:0 0 6px}
+.fashion-habit p#fashionHabitText{font-size:12px;line-height:1.75;color:#675e54;margin:0 0 12px}
+.auto-fashion-switch{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.6;font-weight:700;color:#576b50;cursor:pointer}
+.auto-fashion-switch input{width:18px;height:18px;flex-shrink:0;accent-color:#7e9a75;margin:1px 0 0}
+.auto-fashion-help{font-size:11px;line-height:1.6;color:#8b7c6b;margin:7px 0 0}
+.secret-panel{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:17px}
+.secret-panel #secretHabitText{font-size:13px;color:#665d51;line-height:1.8;margin:9px 0}
+.secret-footnote{color:var(--muted);font-size:11px;line-height:1.6;margin:10px 0 0}
+@media(min-width:600px){.secret-panel{padding:22px}}
+
+
+/* v14: 遊ぶ／模様替え／おめかし／記録の四画面。既存機能は維持。 */
+:root{--ink:#4a433a;--muted:#817669;--paper:#f5f1e8;--card:#fffcf6;--line:#e5dbc9;--sage:#789275;--sage-dark:#4f7256}
+html{scroll-behavior:smooth;scroll-padding-top:86px}
+body{background:linear-gradient(180deg,#f2eddf 0,#f7f4eb 300px,#f7f4eb 100%)}
+.app{max-width:800px;padding:14px 14px 120px;min-height:100dvh}
+.topbar{min-height:68px;align-items:center;margin-bottom:12px;padding:0 3px}
+.brand-heading h1{font-size:clamp(20px,4.4vw,28px);letter-spacing:.015em}
+.header-quick-actions{display:flex;gap:7px;align-items:center;justify-content:flex-end}
+.day-chip{border:1px solid #e0d8ca;background:#ebe5d9;padding:8px 10px;font-size:11px}
+.point-shortcut{display:flex;gap:5px;align-items:center;padding:9px 10px;background:#edf1e7;border:1px solid #c8d7c2;border-radius:999px;color:#4e7854;font-size:12px;font-weight:800;white-space:nowrap}
+.point-shortcut:focus-visible,.nav-tab:focus-visible,.text-route:focus-visible{outline:3px solid #668e6a;outline-offset:3px}
+.app-navigation{display:flex;gap:7px;padding:7px;margin-bottom:16px;border:1px solid #e7decf;border-radius:18px;background:#eee9df;box-shadow:0 2px 11px #4e403b0e}
+.nav-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;padding:10px 7px;border-radius:12px;border:1px solid transparent;background:transparent;color:#756c5e;font-size:13px;font-weight:700;transition:background .16s,color .16s,box-shadow .16s}
+.nav-tab .nav-icon{font-size:20px;line-height:1}
+.nav-tab[aria-selected="true"]{background:#fffefa;color:#4f7355;border-color:#dce6d5;box-shadow:0 3px 10px #4c634516}
+.app-page[hidden],.placement-banner[hidden]{display:none!important}
+.app-page{animation:page-enter .18s ease-out}
+@keyframes page-enter{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.page-heading{margin:3px 3px 14px}
+.page-heading h2{font-size:23px;letter-spacing:.01em}
+.app-page>.room-card,.app-page>.pet-panel,.app-page>.theme-panel,.app-page>.item-panel,.app-page>.wardrobe-panel,.app-page>.bottom-panel,.app-page>.favorite-panel,.app-page>.room-history,.app-page>.memory-panel,.app-page>.secret-panel{margin-top:12px}
+.app-page>.room-card{margin-top:0}
+.room-card,.pet-panel,.bottom-panel,.item-panel,.theme-panel,.wardrobe-panel,.favorite-panel,.room-history,.memory-panel,.secret-panel,.today-panel{border-radius:19px;box-shadow:0 3px 16px rgba(75,65,52,.045)}
+.room-scene{border-radius:0;aspect-ratio:8/5}
+.room-caption{font-size:12px;line-height:1.4;min-height:31px;background:#fffaf1d9;bottom:0;padding:8px 12px}
+.weather-disclosure{border-top:1px solid var(--line);background:#f9f5ed}
+.weather-disclosure>summary{cursor:pointer;list-style:none;padding:10px 15px;display:flex;align-items:center;gap:9px;color:#6c6254;font-size:12px}
+.weather-disclosure>summary::-webkit-details-marker{display:none}
+.weather-disclosure>summary>strong{font-size:13px;color:#655946}
+.weather-summary-action{margin-left:auto;color:#857869;font-size:11px}
+.weather-disclosure[open] .weather-summary-action{color:#517251}
+.weather-panel{background:#f9f5ed;padding:0 16px 13px;border-top:0}
+.weather-panel p{margin:5px 0 0}
+.room-tools{padding:12px 14px 14px;gap:9px}
+.room-tools button{font-size:13px;min-height:44px;background:#f3f0e8}
+.pet-panel{padding:17px}
+.pet-heading h2{font-size:21px}
+.signals{margin:14px 0}
+.signal{line-height:1.4;background:#f2f0e9}
+.actions{gap:9px}
+.action-button{min-height:76px;background:#f7f4eb;font-weight:700;border-color:#e3d9cb}
+.action-button:hover,.quiet-button:hover{background:#eff3e8}
+.action-button.invitation-active{background:#e5f1e5}
+.today-panel{margin-top:12px;padding:16px 17px;background:var(--card);border:1px solid var(--line)}
+.today-panel .section-heading{margin-bottom:5px}
+.today-panel h2{font-size:15px}
+.today-panel p{font-size:13px;line-height:1.7;color:#70665b;margin:7px 0 2px}
+.text-route{display:inline-flex;align-items:center;border:0;background:none;padding:7px 3px;color:#5a7d60;font-size:12px;font-weight:800;cursor:pointer;text-decoration:none}
+.outfit-return{width:100%;justify-content:center;margin-top:15px;border-radius:12px;padding:13px;background:#edf3e9;border:1px solid #cfdfcd;font-size:13px}
+.placement-banner{margin:11px 13px 0;padding:12px;background:#eaf1e6;border:1px solid #bfd4b9;border-radius:13px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.placement-copy strong{font-size:13px;color:#496e50}
+.placement-copy p{font-size:12px;line-height:1.5;margin:4px 0 0;color:#5c775e}
+.placement-banner button{background:#fffdf8;padding:9px 12px;white-space:nowrap;min-height:40px}
+.theme-status{font-size:12px;line-height:1.5;margin:10px 0 0;color:#537451;font-weight:700}
+.item-choice{min-height:110px}
+.item-choice:focus-visible{outline:3px solid #799675;outline-offset:3px}
+.place-journal{padding-top:13px}
+.journal-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:3px 2px 9px;gap:7px}
+.journal-tab{flex:0 0 auto;white-space:nowrap;min-height:40px}
+.journal-place-tabs{flex-wrap:wrap;overflow-x:visible}
+.log{max-height:165px}
+#discoveryNotebook{scroll-margin-top:16px}
+footer{padding-top:18px;line-height:1.7}
+@media(min-width:650px){.app{padding:22px 24px 60px}.app-navigation{position:sticky;top:8px;z-index:30;margin-bottom:20px;backdrop-filter:blur(10px);background:#eee9dfed}.nav-tab{padding:12px;font-size:14px}.page-heading{margin-top:8px}.pet-panel{padding:22px}.today-panel{padding:21px}.action-button{min-height:87px}.room-tools{padding:13px 18px 15px}}
+@media(max-width:649px){.app{padding:12px 12px calc(116px + env(safe-area-inset-bottom))}.topbar{margin-bottom:13px}.app-navigation{position:fixed;bottom:0;left:0;right:0;z-index:60;margin:0;padding:8px max(10px,env(safe-area-inset-left)) calc(9px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right));gap:4px;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0;background:#fffdf6f5;box-shadow:0 -6px 22px rgba(62,52,38,.13);backdrop-filter:blur(14px)}.nav-tab{flex-direction:column;gap:4px;padding:7px 1px 5px;font-size:11px;border-radius:12px;min-height:51px}.nav-tab .nav-icon{font-size:22px}.nav-tab[aria-selected="true"]{background:#eaf2e6;border-color:transparent;box-shadow:none}.page-heading h2{font-size:22px}.room-scene{aspect-ratio:8/5}.weather-label{font-size:10px;top:8px;left:8px;padding:5px 8px}.room-tools{padding:10px 12px}.header-quick-actions{gap:5px}.day-chip{padding:7px 8px;font-size:10px}.point-shortcut{padding:8px 9px;font-size:11px}}
+@media(max-width:365px){.brand-heading h1{font-size:19px}.brand-heading .eyebrow{font-size:8px}.point-shortcut{font-size:10px}.day-chip{font-size:10px}.signal{font-size:11px}.action-button{font-size:11px}.nav-tab{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.app-page{animation:none}.nav-tab{transition:none}html{scroll-behavior:auto}}
