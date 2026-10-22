@@ -4,11 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4ead9">
-  <title>ちいさな同居人 | おへやと好奇心</title>
+  <title>ちいさな同居人 | おめかしと空模様</title>
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
 </head>
 <body>
+<section id="onboarding" class="intro-screen" aria-label="はじめての出会い" hidden>
+  <div class="intro-card">
+    <p class="eyebrow">A LITTLE STRANGE LIFE</p>
+    <p class="intro-step" id="introStepLabel">STEP 1 / 5</p>
+    <h2 id="introTitle" class="intro-title">誰もいない部屋</h2>
+    <p class="intro-description" id="introDescription">静かな部屋です。</p>
+    <div class="intro-scene">
+      <canvas id="introCanvas" width="320" height="200" aria-label="最初の出会いの場面"></canvas>
+      <p class="intro-caption" id="introSceneCaption">しんとした部屋</p>
+    </div>
+    <div class="intro-choices" id="introChoices" hidden>
+      <p class="intro-choices-label">どう接してみますか？</p>
+      <button type="button" data-intro-choice="observe">そっと見守る</button>
+      <button type="button" data-intro-choice="food">食べ物を置く</button>
+      <button type="button" data-intro-choice="approach">そっと近づく</button>
+    </div>
+    <div class="intro-name-group" id="introNameGroup" hidden>
+      <label for="introNameInput">名前（空欄でも始められます）</label>
+      <input id="introNameInput" maxlength="12" autocomplete="off" placeholder="好きな名前をつけてください">
+      <p>名前を決めなくても大丈夫。あとから変更できます。</p>
+    </div>
+    <button type="button" class="primary-button intro-next" id="introNextBtn">部屋を見回す</button>
+    <p class="intro-footnote" id="introFootnote">この子の性格や好みは、数字では表示されません。</p>
+  </div>
+</section>
   <main class="app">
     <header class="topbar">
       <div><p class="eyebrow">A TINY CREATURE, A LITTLE LIFE</p><h1>ちいさな同居人</h1></div>
@@ -22,10 +47,38 @@
         <canvas id="petCanvas" width="320" height="200" tabindex="0" aria-label="ペットと家具がある部屋。配置中はタップして場所を決定"></canvas>
         <div class="room-caption" id="roomCaption">部屋の隅で、小さな物音がしました。</div>
       </div>
+      <div class="weather-panel" aria-label="おへやの天気と季節">
+        <div class="weather-main"><span class="weather-kicker">GAME WEATHER / おへやの空模様</span><strong id="weatherNow">秋の晴れ</strong></div>
+        <p id="weatherDescription">窓の向こうの空を眺めています。</p>
+        <p id="weatherPetHint" class="weather-pet-hint">この子はどんな天気が好きなのでしょう？</p>
+        <span class="weather-disclaimer">現実の天気とは連動していません。季節は端末の日付、天気は約6時間ごとに変化します。</span>
+      </div>
       <div class="room-tools">
         <button class="quiet-button" id="observeBtn">そっと見守る</button>
         <button class="quiet-button" id="callBtn">名前を呼ぶ</button>
       </div>
+    </section>
+
+    <section class="theme-panel" aria-label="おへやの模様替え">
+      <div class="section-heading"><h2>おへやの模様替え</h2><span id="currentRoomTheme">洋風のおへや</span></div>
+      <p class="theme-help">好きなおへやに切り替えられます。それぞれの部屋には、その子だけの特別な行動もあります。ペットや家具、思い出はそのままです。</p>
+      <div class="theme-options" id="roomThemeOptions" role="group" aria-label="おへやのテーマ">
+        <button type="button" class="theme-choice" data-room-theme="western" aria-pressed="true"><img src="assets/rooms/western.png" alt="" loading="lazy"><span>🏠 洋風</span></button>
+        <button type="button" class="theme-choice" data-room-theme="japanese" aria-pressed="false"><img src="assets/rooms/japanese.png" alt="" loading="lazy"><span>🍵 和風</span></button>
+        <button type="button" class="theme-choice" data-room-theme="cute" aria-pressed="false"><img src="assets/rooms/cute.png" alt="" loading="lazy"><span>🌸 可愛い</span></button>
+        <button type="button" class="theme-choice" data-room-theme="cyber" aria-pressed="false"><img src="assets/rooms/cyber.png" alt="" loading="lazy"><span>🌙 サイバー</span></button>
+      </div>
+    </section>
+
+    <section class="wardrobe-panel" aria-label="ペットの頭飾りとふれあいポイント">
+      <div class="section-heading"><h2>おめかし屋さん</h2><span>10種類の頭飾り</span></div>
+      <div class="wardrobe-wallet">
+        <div><span class="wallet-kicker">ふれあいポイント</span><strong id="bondPointBalance" aria-live="polite">0 <small>pt</small></strong></div>
+        <div class="wallet-note">遊ぶ・食べる・呼びかけに応じるなど、うれしい交流で増えます。<br>同じ交流の連続獲得には待ち時間があり、1日100ptまで。</div>
+      </div>
+      <p id="wardrobeMessage" class="wardrobe-message" role="status">気になる飾りを見つけてみましょう。</p>
+      <div id="headwearChoices" class="headwear-grid" role="group" aria-label="頭の飾りを選ぶ"></div>
+      <p class="wardrobe-footnote">一度解放した飾りはずっと使えます。ポイントで使えるのはゲーム内アイテムだけで、購入や課金はありません。飾りをつけなくても大丈夫です。</p>
     </section>
 
     <section class="item-panel" aria-label="部屋に置くおもちゃと家具">
@@ -39,6 +92,28 @@
       </div>
       <button class="quiet-button cancel-place" id="cancelPlaceBtn" hidden>配置をやめる</button>
       <p class="item-footnote">好きなものは、教えてくれません。そっと様子を観察してみましょう。</p>
+    </section>
+
+    <section class="room-history" aria-label="部屋に残された暮らしの痕跡">
+      <div class="section-heading"><h2>おへやの気配</h2><span>小さな変化</span></div>
+      <p class="room-history-text" id="roomTraceText" aria-live="polite">静かな部屋です。どんな変化が残るでしょう？</p>
+      <div class="room-history-actions">
+        <button class="quiet-button" id="inspectRoomBtn">部屋を見回す</button>
+        <button class="quiet-button" id="tidyRoomBtn" title="家具の場所は変えずに、残った跡を片づけます">そっと片づける</button>
+      </div>
+      <p class="room-history-hint">留守中にも部屋の様子が変わることがあります。片づけても、この子の記憶は消えません。</p>
+    </section>
+
+    <section class="favorite-panel" aria-label="ペットが落ち着く居場所">
+      <div class="section-heading"><h2>いつもの居場所</h2><span>この子の習慣</span></div>
+      <p id="favoritePlaceText" class="favorite-text">まだ、部屋のあちこちを試しているようです。</p>
+      <p class="favorite-hint">気持ちは数字ではなく、何度も戻る仕草から少しずつわかります。家具を動かしても、その子の思い出は残ります。</p>
+      <button type="button" class="quiet-button favorite-story-button" id="favoriteStoryBtn">この場所の思い出を読む ↓</button>
+    </section>
+
+    <section class="memory-panel" aria-label="思い出から生まれる生活習慣">
+      <div class="section-heading"><h2>思い出のつづき</h2><span>経験がつながる</span></div>
+      <p id="memoryHabitText">一緒に過ごした経験が、次の行動につながるかもしれません。</p>
     </section>
 
     <section class="pet-panel">
@@ -57,10 +132,20 @@
       </div>
     </section>
 
-    <section class="bottom-panel">
-      <div class="section-heading"><h2>今日の小さな発見</h2><span id="discoveryCount">0件</span></div>
+    <section class="bottom-panel" id="discoveryNotebook">
+      <div class="section-heading"><h2>発見ノート</h2><span id="discoveryCount">0件</span></div>
       <p id="discoveryText">ペットの行動を観察すると、少しずつこの子のことがわかります。</p>
+      <div class="place-journal" aria-label="ペットの暮らしと交流の思い出">
+        <div class="journal-heading"><h3>暮らしと思い出</h3><span>その子だけの記録</span></div>
+        <p class="journal-intro" id="placeJournalIntro">居場所・交流だけでなく、天気やおへやをきっかけに見せた行動も記録します。</p>
+        <div id="journalCategoryTabs" class="journal-tabs" role="group" aria-label="思い出の種類を選ぶ"></div>
+        <div id="placeJournalTabs" class="journal-tabs journal-place-tabs" role="group" aria-label="思い出を見る場所" hidden></div>
+        <ol id="placeJournalEntries" class="place-journal-entries"></ol>
+        <p class="journal-help">思い出の日時は、実際に観察できた出来事だけを記録します。以前の出来事に架空の日付はつけません。</p>
+      </div>
+      <h3 class="recent-heading">最近の出来事</h3>
       <div class="log" id="log" aria-live="polite"><p>モフリが部屋にやってきました。</p></div>
+    <button class="intro-preview-link" type="button" id="introPreviewBtn">初回の出会いをお試し表示（セーブはそのまま）</button>
     <button class="reset-link" id="resetBtn">最初からやり直す</button>
   </section>
   <footer>感情の数値は表示されません。仕草を観察してみましょう。暮らしの記録はこのブラウザ内に保存されます。</footer>
