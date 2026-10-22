@@ -227,3 +227,16 @@ footer{padding-top:18px;line-height:1.7}
 @media(max-width:649px){.app{padding:12px 12px calc(116px + env(safe-area-inset-bottom))}.topbar{margin-bottom:13px}.app-navigation{position:fixed;bottom:0;left:0;right:0;z-index:60;margin:0;padding:8px max(10px,env(safe-area-inset-left)) calc(9px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right));gap:4px;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0;background:#fffdf6f5;box-shadow:0 -6px 22px rgba(62,52,38,.13);backdrop-filter:blur(14px)}.nav-tab{flex-direction:column;gap:4px;padding:7px 1px 5px;font-size:11px;border-radius:12px;min-height:51px}.nav-tab .nav-icon{font-size:22px}.nav-tab[aria-selected="true"]{background:#eaf2e6;border-color:transparent;box-shadow:none}.page-heading h2{font-size:22px}.room-scene{aspect-ratio:8/5}.weather-label{font-size:10px;top:8px;left:8px;padding:5px 8px}.room-tools{padding:10px 12px}.header-quick-actions{gap:5px}.day-chip{padding:7px 8px;font-size:10px}.point-shortcut{padding:8px 9px;font-size:11px}}
 @media(max-width:365px){.brand-heading h1{font-size:19px}.brand-heading .eyebrow{font-size:8px}.point-shortcut{font-size:10px}.day-chip{font-size:10px}.signal{font-size:11px}.action-button{font-size:11px}.nav-tab{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.app-page{animation:none}.nav-tab{transition:none}html{scroll-behavior:auto}}
+
+/* v15 — ふわっとなでる。指でなぞるときは横方向の動きを優先し、縦スクロールは残す */
+#petCanvas:not(.placement-active){cursor:pointer;touch-action:pan-y}
+.pet-touch-help{margin:0;padding:0 15px 13px;color:#746b62;font-size:12px;line-height:1.55;text-align:center;background:#fffdf7}
+#strokePetBtn{background:#f8edef;border-color:#ead4d8;color:#79575d}
+#strokePetBtn.petting-request-active{background:#f8dce4;border:2px solid #c68b9a;animation:gentle-glow 2.4s ease-in-out infinite}
+.petting-memory-panel{margin-top:14px;background:#fffdf6;border:1px solid var(--line);border-radius:18px;padding:17px}
+.petting-memory-panel p{font-size:13px;line-height:1.7;color:#716859;margin:0}
+@media(max-width:649px){.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.action-button{min-height:70px}.pet-touch-help{font-size:11px}}
+@media(min-width:650px){.actions{grid-template-columns:repeat(4,minmax(0,1fr))}.petting-memory-panel{padding:22px}}
+@media(prefers-reduced-motion:reduce){#strokePetBtn.petting-request-active{animation:none}}
+/* 吹き出しや天気ラベルがペットへのタップを邪魔しないようにする */
+.room-scene .thought,.room-scene .weather-label,.room-scene .room-caption{pointer-events:none}
