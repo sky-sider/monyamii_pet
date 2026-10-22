@@ -666,3 +666,111 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background-im
     background: transparent;
   }
 }
+
+
+/* v28: 自発的な贈りものと発見ノート内コレクション */
+.social-request-controls{display:flex;flex-wrap:wrap;gap:9px}
+.social-request-controls .quiet-button{min-height:42px}
+.gift-collection{border-radius:16px;background:linear-gradient(180deg,#fff9ef,#fffdf9);border:1px solid #eddcd2;padding:14px;margin:14px 0 18px;min-width:0}
+.gift-collection .section-heading h3{margin:0;font-size:15px;color:#83655f}
+.gift-collection-summary{font-size:12px;line-height:1.7;color:#816f68;margin:8px 0 12px}
+.gift-collection-list{display:grid;gap:8px;max-height:420px;overflow-y:auto;min-width:0}
+.gift-collection-entry{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #efe2d5;border-radius:13px;background:#fffdfa;min-width:0}
+.gift-collection-entry img{width:44px;height:44px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.gift-collection-entry div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.gift-collection-entry strong{font-size:13px;color:#705952}
+.gift-collection-entry time,.gift-collection-entry span{font-size:11px;color:#907d72;line-height:1.45;overflow-wrap:anywhere}
+.gift-collection-empty{margin:0;font-size:12px;color:#8a7770;line-height:1.75}
+@media(max-width:649px){.gift-collection{padding:12px}.gift-collection-entry{padding:8px}.social-request-controls .quiet-button{flex:1;min-width:110px}}
+
+
+/* v29: お散歩のおみやげ図鑑。閉じているときは散歩画面を圧迫しない */
+.souvenir-album{min-width:0;margin-top:12px;padding:0 12px;border:1px solid #eedcd4;border-radius:17px;background:linear-gradient(180deg,#fffdfa,#fff8f3);box-shadow:0 4px 14px #9d776312}
+.souvenir-album>summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:10px 3px;color:#775f56;font-size:13px;font-weight:800}
+.souvenir-album>summary small{font-size:11px;color:#887a6d;background:#faf0e8;padding:5px 9px;border-radius:999px;white-space:nowrap}
+.souvenir-album-help{margin:1px 0 12px;font-size:11px;line-height:1.7;color:#928073}
+.souvenir-album-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-bottom:13px;min-width:0}
+.souvenir-album-location{grid-column:1/-1;font-size:12px;letter-spacing:.05em;color:#806e60;margin:8px 0 1px}
+.souvenir-album-card{display:flex;align-items:center;gap:8px;min-width:0;border:1px solid #eaded4;border-radius:12px;background:#fffdf9;padding:7px}
+.souvenir-album-card img{width:35px;height:35px;flex:0 0 35px;object-fit:contain;image-rendering:pixelated}
+.souvenir-album-card.is-unknown img{filter:grayscale(1) brightness(0);opacity:.14}
+.souvenir-album-card>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.souvenir-album-card strong{font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.souvenir-album-card small{font-size:10px;color:#948275;line-height:1.4;overflow-wrap:anywhere}
+@media(max-width:380px){.souvenir-album-grid{grid-template-columns:1fr}.souvenir-album-card img{width:31px;height:31px;flex-basis:31px}}
+@media(min-width:900px){.souvenir-album-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* v30: 宝物の飾り棚・ペットの愛着・贈りものの習慣 */
+.treasure-shelf-strip{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;padding:9px 13px;background:linear-gradient(180deg,#fff9f2,#fffaf7);border-bottom:1px solid #f0ddd6;color:#866e61;font-size:11px;line-height:1.5;min-width:0}
+.treasure-shelf-strip span{flex:1 1 170px;min-width:0;overflow-wrap:anywhere}
+.treasure-shelf-link{border:1px solid #ead3c6;border-radius:999px;background:#fffdfa;color:#80675e;padding:7px 9px;font-size:11px;font-weight:800;min-height:34px;cursor:pointer}
+.gift-treasure-insight{margin:9px 0 13px;padding:11px 12px;border:1px solid #efdfd4;border-radius:12px;background:#fffdf8}
+.gift-treasure-insight strong{font-size:12px;color:#7d6359}
+.gift-treasure-insight p{font-size:12px;color:#8d786c;line-height:1.65;margin:5px 0 0}
+.gift-decor-heading{display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center;gap:6px;color:#7b625b;font-size:12px}
+.gift-decor-heading span{font-size:11px;color:#967f71;background:#f8efe5;border-radius:20px;padding:4px 9px}
+.gift-decor-help{font-size:11px;line-height:1.7;color:#978374;margin:7px 0 11px}
+.gift-decor-notice:empty{display:none}
+.gift-decor-notice{font-size:12px;line-height:1.55;color:#725e55;background:#fff1e7;border-radius:9px;padding:8px 9px;margin:8px 0}
+.gift-treasure-card{align-items:flex-start}
+.gift-collection-entry.gift-treasure-card img{width:48px;height:48px}
+.gift-treasure-copy{flex:1;min-width:0}
+.gift-collection-entry .gift-affection{font-size:11px;color:#a06f70}
+.gift-collection-entry .gift-treasure-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.gift-decor-button{border:1px solid #e6cfc5;border-radius:9px;background:#fff6f0;min-height:37px;padding:8px 11px;color:#7e615d;cursor:pointer;font-size:11px;font-weight:800;touch-action:manipulation}
+.gift-decor-button.is-displayed{background:#e9f2e7;border-color:#b7d0b1;color:#546f55}
+.gift-decor-button:focus-visible,.treasure-shelf-link:focus-visible{outline:3px solid #81a080;outline-offset:2px}
+@media(max-width:649px){
+ .gift-collection,.gift-collection-list,.gift-treasure-card,.gift-treasure-copy{min-width:0;max-width:100%}
+ .gift-treasure-card{flex-wrap:nowrap}
+ .gift-treasure-copy{overflow-wrap:anywhere}
+ .treasure-shelf-strip{padding:8px 11px}
+ .gift-decor-button{min-height:43px}
+}
+
+
+/* v34: 大切な記録のバックアップ。スマホはノート内「保存」タブに収める */
+.backup-panel{border:1px solid #eeddd7;border-radius:19px;background:linear-gradient(180deg,#fffefc,#fffaf6);padding:17px;box-shadow:0 8px 26px rgba(177,146,137,.08);min-width:0}
+.backup-panel .section-heading{flex-wrap:wrap;gap:7px}
+.backup-panel .section-heading h2{font-size:17px}
+.backup-help,.backup-block p,.backup-footnote{font-size:12px;line-height:1.7;color:#877369;overflow-wrap:anywhere}
+.backup-help{margin:9px 0 14px}
+.backup-block{border:1px solid #eddfd6;background:#fffdf9;border-radius:15px;padding:13px;margin-top:12px;min-width:0}
+.backup-block h3{font-size:13px;color:#745f55;margin:0 0 7px}
+.backup-block p{margin:0 0 10px}
+.backup-main-button,.backup-restore-button,.backup-undo-button{width:100%;min-height:46px;touch-action:manipulation;font-weight:800}
+.backup-main-button{background:#7d9d83;border-color:#7d9d83;color:white}
+.backup-file-label{font-size:12px;font-weight:800;color:#785f59;display:block;margin-bottom:7px}
+.backup-file-input{display:block;width:100%;min-width:0;max-width:100%;font-size:12px;color:#755f56;border:1px dashed #dec7bd;border-radius:11px;background:#fff9f6;padding:12px 8px;box-sizing:border-box}
+.backup-file-input::file-selector-button{border:1px solid #e4cbc0;border-radius:9px;background:#f9efea;padding:9px;font-weight:800;color:#755f56;margin-right:8px}
+.backup-panel .backup-status{min-height:0;font-size:11px;line-height:1.6;margin:10px 0 0;color:#756f63}
+.backup-status.is-error{color:#a14d54}
+.backup-preview[hidden],.backup-safety[hidden]{display:none!important}
+.backup-preview{margin-top:12px;padding:12px;border:1px solid #cddcc8;border-radius:12px;background:#f5f9f1;min-width:0}
+.backup-preview>strong,.backup-safety>strong{font-size:13px;color:#59725b}
+.backup-preview dl{margin:10px 0;display:grid;gap:6px}
+.backup-preview dl>div{display:grid;grid-template-columns:minmax(0,108px) minmax(0,1fr);gap:10px;border-bottom:1px solid #dde5d8;padding:5px 0}
+.backup-preview dt{font-size:11px;color:#72846e}
+.backup-preview dd{margin:0;font-size:12px;font-weight:800;color:#596b57;overflow-wrap:anywhere;min-width:0}
+.backup-panel .backup-warning{font-size:11px;color:#a05d5a;line-height:1.7;margin:10px 0 12px}
+.backup-restore-button{background:#fff9f5;border:1px solid #ddbbb2;border-radius:11px;color:#a05450;padding:10px}
+.backup-safety{margin-top:12px;padding:12px;border:1px solid #e6d7c8;background:#fff9ef;border-radius:13px}
+.backup-safety p{margin:6px 0 10px;font-size:11px;color:#806f61;line-height:1.65}
+.backup-panel .backup-footnote{margin:12px 1px 0;font-size:11px}
+.backup-main-button:focus-visible,.backup-restore-button:focus-visible,.backup-undo-button:focus-visible,.backup-file-input:focus-visible{outline:3px solid #749778;outline-offset:2px}
+@media(max-width:649px){
+  #page-notes>.mobile-page-switcher[data-mobile-group="notes"]{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;overflow:visible;min-width:0;max-width:100%}
+  #page-notes>.mobile-page-switcher[data-mobile-group="notes"]>.mobile-page-chip{width:100%;min-width:0;flex:initial;gap:4px;padding:6px 2px;min-height:43px;font-size:11px;justify-content:center}
+  #page-notes>.mobile-page-switcher[data-mobile-group="notes"] .chip-illustration{width:21px;height:21px}
+  .backup-panel{padding:14px}
+  .backup-block{padding:11px}
+}
+@media(min-width:600px){.backup-panel{padding:20px}}
+
+/* スマホでも日本語でわかりやすいファイル選択ボタン */
+.backup-file-label{display:flex;align-items:center;justify-content:center;min-height:45px;padding:10px 12px;border:1px solid #ddc2b8;border-radius:11px;background:#fff6f2;color:#83665e;font-size:12px;font-weight:800;cursor:pointer;box-sizing:border-box;width:100%;margin:0}
+.backup-file-label::before{content:'📂';margin-right:7px;font-size:15px}
+.backup-file-name{font-size:11px!important;line-height:1.6!important;color:#907a6e!important;overflow-wrap:anywhere;margin:7px 0 0!important}
+.backup-file-input{position:absolute;inline-size:1px;block-size:1px;padding:0;margin:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.backup-panel:has(.backup-file-input:focus-visible) .backup-file-label{outline:3px solid #749778;outline-offset:2px}

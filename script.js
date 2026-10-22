@@ -1,8 +1,13 @@
 'use strict';
 
-// ちいさな同居人 v22 — 頭飾り22種類とおめかし絞り込み。v21までの全機能と既存セーブキーを保持。
+// ちいさな同居人 v34 — 8種類の部屋背景を高密度ドット絵にリニューアル。
 // 数値は内部でのみ扱います。プレイヤーには仕草と行動で伝えます。
-const SAVE_KEY = 'mofuri-pet-save-v1'; // v1 / v2 のセーブデータを引き継ぐ
+const SAVE_KEY = 'mofuri-pet-save-v1'; // 従来のセーブデータをそのまま引き継ぐ
+const PRE_RESTORE_KEY = 'mofuri-pet-before-restore-v1'; // 復元直前の記録を退避
+// v32 修正版: 起動中・不在中の空腹進行を同じ実時間基準に統一する。
+const HUNGER_GAIN_PER_HOUR = 3;
+const HUNGER_SEARCH_COOLDOWN_MS = 3 * 60 * 1000; // 空腹でも同じ仕草を連発しない。
+
 const canvas = document.getElementById('petCanvas');
 const ctx = canvas.getContext('2d');
 const $ = (id) => document.getElementById(id);
@@ -29,10 +34,14 @@ const ROOM_ITEM_TYPES = {
 const ROOM_MAX_PLACED = 6; // 部屋が混み合わないようにする。収納しても記憶は残る。
 // 背景だけを模様替え。既存の家具座標・習慣・ペットの記憶は保持する。
 const ROOM_THEMES = Object.freeze({
-  western: {label:'洋風',file:'western.png'},
-  japanese: {label:'和風',file:'japanese.png'},
-  cute: {label:'可愛い',file:'cute.png'},
-  cyber: {label:'サイバー',file:'cyber.png'}
+  western: {label:'洋風',title:'洋風のおへや',button:'洋風',file:'western.png'},
+  japanese: {label:'和風',title:'和風のおへや',button:'和風',file:'japanese.png'},
+  cute: {label:'可愛い',title:'可愛いおへや',button:'可愛い',file:'cute.png'},
+  cyber: {label:'サイバー',title:'サイバーのおへや',button:'サイバー',file:'cyber.png'},
+  forest: {label:'森の小屋',title:'森の小屋',button:'森の小屋',file:'forest.png'},
+  magic: {label:'魔法使い',title:'魔法使いのおへや',button:'魔法使い',file:'magic.png'},
+  ocean: {label:'海の見える',title:'海の見えるおへや',button:'海の見える',file:'ocean.png'},
+  starry: {label:'星降る',title:'星降るおへや',button:'星降る',file:'starry.png'}
 });
 // —— v16: おさんぽ先と探索対象。場所と対象を分けて記憶する。——
 const WALK_DESTINATIONS={
@@ -52,6 +61,234 @@ const WALK_DESTINATIONS={
    {id:'acorn',label:'どんぐり',x:146,y:176,verb:'ころんとしたどんぐりをつつく',souvenir:'どんぐり',itemId:'acorn',tags:['丸いもの']},
    {id:'leaf',label:'落ち葉',x:288,y:171,verb:'風に揺れる葉っぱを追いかける',souvenir:'変わった形の葉っぱ',itemId:'leaf',tags:['葉っぱ']} ]}
 };
+
+// v28: お土産の共通定義。v29以降は品目をここへ追加し、散歩先のtarget.itemIdに結びつけます。
+// 保存済みの履歴とは独立し、品目IDを変更しない限り互換性を維持します。
+const SOUVENIR_CATALOG=Object.freeze({
+ petal:{name:'花びら',location:'town',targetId:'flowers',tags:['葉っぱ'],rarity:1,sprite:'petal.png',dropWeight:67},
+ button:{name:'小さなボタン',location:'town',targetId:'button',tags:['丸いもの','小さな石'],rarity:2,sprite:'button.png',dropWeight:67},
+ shell:{name:'しましま貝殻',location:'sea',targetId:'shell',tags:['丸いもの'],rarity:1,sprite:'shell.png',dropWeight:67},
+ glass:{name:'丸いシーグラス',location:'sea',targetId:'glass',tags:['光るもの'],rarity:2,sprite:'glass.png',dropWeight:67},
+ acorn:{name:'どんぐり',location:'mountain',targetId:'acorn',tags:['丸いもの'],rarity:1,sprite:'acorn.png',dropWeight:67},
+ leaf:{name:'変わった形の葉っぱ',location:'mountain',targetId:'leaf',tags:['葉っぱ'],rarity:2,sprite:'leaf.png',dropWeight:67},
+ // v29: 既存6種類のIDと名前は変えず、同じ探索対象から別の宝物も見つかるようにする。
+ clover:{name:'四つ葉のクローバー',location:'town',targetId:'flowers',tags:['葉っぱ'],rarity:2,sprite:'clover.png',dropWeight:25,weatherBoost:{rain:1.35},seasonBoost:{spring:1.3}},
+ star_petal:{name:'星形の花びら',location:'town',targetId:'flowers',tags:['葉っぱ','光るもの'],rarity:3,sprite:'star_petal.png',dropWeight:8,seasonBoost:{spring:1.7}},
+ bead:{name:'透きとおるビー玉',location:'town',targetId:'button',tags:['丸いもの','光るもの'],rarity:2,sprite:'bead.png',dropWeight:25,weatherBoost:{sun:1.25}},
+ key:{name:'小さな古い鍵',location:'town',targetId:'button',tags:['小さな石','光るもの'],rarity:3,sprite:'key.png',dropWeight:8,seasonBoost:{autumn:1.5}},
+ spiral_shell:{name:'くるくる貝',location:'sea',targetId:'shell',tags:['丸いもの'],rarity:2,sprite:'spiral_shell.png',dropWeight:25,weatherBoost:{cloud:1.25}},
+ pearl:{name:'真珠色の小粒',location:'sea',targetId:'shell',tags:['丸いもの','光るもの'],rarity:3,sprite:'pearl.png',dropWeight:8,weatherBoost:{sun:1.5}},
+ blue_glass:{name:'青いシーグラス',location:'sea',targetId:'glass',tags:['光るもの'],rarity:2,sprite:'blue_glass.png',dropWeight:25,weatherBoost:{sun:1.35}},
+ amber_glass:{name:'琥珀色のシーグラス',location:'sea',targetId:'glass',tags:['光るもの'],rarity:3,sprite:'amber_glass.png',dropWeight:8,seasonBoost:{summer:1.6}},
+ pinecone:{name:'まつぼっくり',location:'mountain',targetId:'acorn',tags:['丸いもの','葉っぱ'],rarity:2,sprite:'pinecone.png',dropWeight:25,seasonBoost:{winter:1.2}},
+ striped_nut:{name:'しましま木の実',location:'mountain',targetId:'acorn',tags:['丸いもの'],rarity:3,sprite:'striped_nut.png',dropWeight:8,seasonBoost:{autumn:1.7}},
+ feather:{name:'小鳥の羽根',location:'mountain',targetId:'leaf',tags:['柔らかいもの'],rarity:2,sprite:'feather.png',dropWeight:25,weatherBoost:{cloud:1.3}},
+ maple_leaf:{name:'赤いもみじ',location:'mountain',targetId:'leaf',tags:['葉っぱ'],rarity:3,sprite:'maple_leaf.png',dropWeight:8,seasonBoost:{autumn:1.8}},
+});
+// v29: 探索対象ごとの候補をカタログから自動で取得。
+// 天気・季節は「見つけやすさ」を変えるだけなので、好きな季節に遊ばなくても全種類集められる。
+function souvenirCandidates(locationId,targetId){
+ return Object.entries(SOUVENIR_CATALOG).filter(([,item])=>item.location===locationId&&item.targetId===targetId)
+   .map(([id,item])=>({id,item}));
+}
+function chooseWalkSouvenir(locationId,target,now=Date.now(),random=Math.random){
+ const weather=weatherForTime(now);
+ const candidates=souvenirCandidates(locationId,target.id);
+ if(!candidates.length)return null;
+ const weights=candidates.map(({id,item})=>{
+   const base=Number.isFinite(item.dropWeight)?item.dropWeight:(item.rarity===3?8:item.rarity===2?25:67);
+   const seasonal=item.seasonBoost?.[weather.season]||1;
+   const sky=item.weatherBoost?.[weather.weather]||1;
+   const favorite=Array.isArray(item.tags)&&item.tags.includes(pet.favorite)?1.12:1;
+   return {id,weight:Math.max(0,base*seasonal*sky*favorite)};
+ });
+ // weightedChoiceが返すのは品目ID。候補外の値は通さない。
+ let roll=random()*weights.reduce((sum,item)=>sum+item.weight,0);
+ for(const entry of weights){
+   roll-=entry.weight;
+   if(roll<0)return {id:entry.id,...SOUVENIR_CATALOG[entry.id]};
+ }
+ const last=weights[weights.length-1].id;
+ return {id:last,...SOUVENIR_CATALOG[last]};
+}
+const SOUVENIR_RARITY_LABELS={1:'いつもの宝物',2:'ちょっとめずらしい',3:'とてもめずらしい'};
+
+const GIFT_DAY_LIMIT=2, GIFT_RECORD_LIMIT=80, GIFT_MIN_GAP=20*60*1000;
+const TREASURE_DISPLAY_MAX=3;
+const TREASURE_ADMIRE_GAP=8*60*1000; // 飾ってあるものを見つめる行動の間隔
+const TREASURE_AFFECTION_MAX=100;
+const giftItemIds=()=>Object.keys(SOUVENIR_CATALOG);
+const newGiftMemory=()=>({version:2,inventory:{},found:{},givenCounts:{},tastes:{},given:[],totalGiven:0,lastGivenAt:0,lastOfferedAt:0,affection:{},displayed:[],lastGiftId:null,repeatStreak:0,longestStreak:{},lastAdmiredAt:0});
+function stableGiftTaste(id){
+  const text=[pet.name,pet.palette,pet.favorite,pet.curiosity,pet.attachment,pet.dayStarted,id].join('|');
+  let hash=2166136261;
+  for(const letter of text) hash=Math.imul(hash^letter.charCodeAt(0),16777619)>>>0;
+  return hash%23-11;
+}
+function normalizeGiftMemory(raw){
+  const old=raw&&typeof raw==='object' ? raw:null;
+  const value=newGiftMemory();
+  // v27以前に拾った品物を、初回の一度だけ未贈呈の在庫として移行。
+  // 元のお散歩履歴はそのまま残し、v28再起動時に再加算しない。
+  if(!old){
+    for(const s of pet.walkMemory.souvenirs||[]){
+      const item=SOUVENIR_CATALOG[s.id];if(!item)continue;
+      value.inventory[s.id]=(value.inventory[s.id]||0)+1;
+      value.found[s.id]=(value.found[s.id]||0)+1;
+    }
+  }
+  for(const id of giftItemIds()){
+    value.inventory[id]=clamp(Number(old?.inventory?.[id])||value.inventory[id]||0,0,999);
+    value.found[id]=clamp(Number(old?.found?.[id])||value.found[id]||0,0,99999);
+    value.givenCounts[id]=clamp(Number(old?.givenCounts?.[id])||0,0,99999);
+    value.tastes[id]=clamp(Number.isFinite(old?.tastes?.[id])?old.tastes[id]:stableGiftTaste(id),-30,30);
+    // v29の確実な贈呈回数のみ、現在の愛着の初期値に使う。昔の出来事の日付は創作しない。
+    const observed=Number.isFinite(old?.affection?.[id])?old.affection[id]:Math.min(60,value.givenCounts[id]*8);
+    value.affection[id]=clamp(observed,0,TREASURE_AFFECTION_MAX);
+  }
+  if(old){
+    value.given=Array.isArray(old.given)?old.given.filter(x=>x&&SOUVENIR_CATALOG[x.id]&&Number.isFinite(x.at)&&x.at>0)
+      .slice(-GIFT_RECORD_LIMIT).map(x=>({id:x.id,at:x.at,location:SOUVENIR_CATALOG[x.id].location,
+        response:String(x.response||'').slice(0,90)})):[];
+    value.totalGiven=clamp(Number(old.totalGiven)||0,0,99999);
+    value.lastGivenAt=Number.isFinite(old.lastGivenAt)?old.lastGivenAt:0;
+    value.lastOfferedAt=Number.isFinite(old.lastOfferedAt)?old.lastOfferedAt:0;
+    // 飾り棚は種類につき一点。受け取っていないもの・存在しないIDは飾れない。
+    value.displayed=Array.isArray(old.displayed)?[...new Set(old.displayed.filter(id=>SOUVENIR_CATALOG[id]&&value.givenCounts[id]>0))].slice(0,TREASURE_DISPLAY_MAX):[];
+    value.longestStreak={};
+    for(const id of giftItemIds())value.longestStreak[id]=clamp(Number(old.longestStreak?.[id])||0,0,99999);
+    if(old.version>=2 && old.lastGiftId && SOUVENIR_CATALOG[old.lastGiftId] && old.repeatStreak>0){
+      value.lastGiftId=old.lastGiftId;
+      value.repeatStreak=clamp(Number(old.repeatStreak)||0,0,99999);
+    }else{
+      // v29からの移行では実際の贈呈履歴の末尾だけで連続回数を復元する。
+      for(const gift of value.given){
+        value.repeatStreak=gift.id===value.lastGiftId?value.repeatStreak+1:1;
+        value.lastGiftId=gift.id;
+        value.longestStreak[gift.id]=Math.max(value.longestStreak[gift.id]||0,value.repeatStreak);
+      }
+    }
+    value.lastAdmiredAt=Number.isFinite(old.lastAdmiredAt)&&old.lastAdmiredAt>0?old.lastAdmiredAt:0;
+  }
+  return value;
+}
+function treasuredGiftIds(){
+ return giftItemIds().filter(id=>(pet.giftMemory?.givenCounts?.[id]||0)>0);
+}
+function treasureAffection(id){return clamp(pet.giftMemory?.affection?.[id]||0,0,TREASURE_AFFECTION_MAX);}
+function treasureAffectionText(id){
+ const value=treasureAffection(id);
+ if(value>=65)return '何度も選ぶ、とっておきの宝物';
+ if(value>=35)return 'ときどき思い出している宝物';
+ if(value>=15)return '気にかけているみたい';
+ return 'これから思い出が増えそう';
+}
+function treasureHabitText(){
+ const m=pet.giftMemory;
+ const repeated=giftItemIds().filter(id=>(m.givenCounts[id]||0)>=2)
+   .sort((a,b)=>(m.givenCounts[b]||0)-(m.givenCounts[a]||0));
+ if(!repeated.length)return 'まだ決まった贈りものの癖はわかりません。どんな品を選ぶようになるでしょう。';
+ const id=repeated[0],n=m.givenCounts[id];
+ return `${pet.name}は${SOUVENIR_CATALOG[id].name}を${n}回も渡してくれました。${n>=5?'よほど気に入っているのかもしれません。':'また同じものを選ぶことがあるようです。'}`;
+}
+function updateTreasureShelf(){
+ const status=$('treasureShelfStatus');if(!status)return;
+ const ids=pet.giftMemory.displayed;
+ status.textContent=ids.length?`飾り棚 ${ids.length}/${TREASURE_DISPLAY_MAX}：${ids.map(id=>SOUVENIR_CATALOG[id]?.name||'宝物').join('・')}`:
+   '飾り棚はまだ空っぽ。もらった宝物を飾れます。';
+}
+function toggleGiftDecoration(id){
+ if(onboardingActive||!SOUVENIR_CATALOG[id]||(pet.giftMemory.givenCounts[id]||0)<1)return false;
+ const displayed=pet.giftMemory.displayed;
+ const current=displayed.indexOf(id),message=$('giftDecorNotice');
+ if(current!==-1){
+   displayed.splice(current,1);
+   if(message)message.textContent=`${SOUVENIR_CATALOG[id].name}を飾り棚から大切にしまいました。`;
+ }else{
+   if(displayed.length>=TREASURE_DISPLAY_MAX){
+     if(message)message.textContent=`飾れるのは${TREASURE_DISPLAY_MAX}種類までです。先にほかの宝物をしまってください。`;
+     return false;
+   }
+   displayed.push(id);
+   pet.giftMemory.affection[id]=clamp(treasureAffection(id)+3,0,TREASURE_AFFECTION_MAX);
+   if(message)message.textContent=`${SOUVENIR_CATALOG[id].name}をおへやの飾り棚に置きました。`;
+   recordMoment(`gift_display_${id}`,`${pet.name}にもらった${SOUVENIR_CATALOG[id].name}を、部屋に飾りました。`,
+     '受け取った贈りものは、しまってもなくなりません。',{title:`${SOUVENIR_CATALOG[id].name}を飾った日`});
+ }
+ renderGiftCollection();save();return true;
+}
+function drawTreasureShelf(time){
+ const ids=pet.giftMemory?.displayed||[];
+ if(!ids.length)return;
+ // 既存の家具6個とは別の小さな壁飾り。背景テーマを変更しても同じ位置に置く。
+ ctx.save();ctx.imageSmoothingEnabled=false;
+ ctx.fillStyle='#8f6d58';ctx.fillRect(207,143,105,5);
+ ctx.fillStyle='#c59b7c';ctx.fillRect(207,141,105,3);
+ ctx.fillStyle='#eed6b6';ctx.fillRect(209,139,101,2);
+ for(let i=0;i<ids.length;i++){
+   const img=giftSprites[ids[i]];
+   if(img?.complete&&img.naturalWidth)ctx.drawImage(img,214+i*32,111,28,28);
+   if(Math.floor(time/600)%4===0 && treasureAffection(ids[i])>=65){
+     ctx.fillStyle='#ffe6a5';ctx.fillRect(240+i*32,115,3,3);
+   }
+ }
+ ctx.restore();
+}
+function maybeAdmireTreasure(now){
+ const m=pet.giftMemory,ids=m.displayed;
+ if(!ids.length||now-m.lastAdmiredAt<TREASURE_ADMIRE_GAP||Math.random()>=.22)return false;
+ const choice=weightedChoice(ids.map(id=>({id,weight:Math.max(2,12+treasureAffection(id)*.4)})));
+ const item=SOUVENIR_CATALOG[choice];if(!item)return false;
+ m.lastAdmiredAt=now;
+ m.affection[choice]=clamp(treasureAffection(choice)+2,0,TREASURE_AFFECTION_MAX);
+ startAction('look',6000,'curious',240);
+ $('roomCaption').textContent=`${pet.name}は飾ってある${item.name}を、しばらくじっと見つめています。`;
+ showThought('…♪');
+ recordMoment(`gift_admire_${choice}`,`${pet.name}が飾り棚の${item.name}を、ふと思い出したように見つめていました。`,
+   '贈りものを飾ったあと、自分から見に来てくれた日です。',{title:`${item.name}を見つめた日`});
+ renderGiftCollection();save();return true;
+}
+function souvenirCount(id){return Math.max(0,Number(pet.giftMemory?.inventory?.[id])||0);}
+function unwrappedGiftCount(){return giftItemIds().reduce((n,id)=>n+souvenirCount(id),0);}
+function giftsReceivedToday(now=Date.now()){
+  const start=new Date(now);start.setHours(0,0,0,0);
+  return pet.giftMemory.given.filter(g=>g.at>=start.getTime()&&g.at<=now).length;
+}
+function canOfferGift(now=Date.now()){
+  return unwrappedGiftCount()>0 && giftsReceivedToday(now)<GIFT_DAY_LIMIT &&
+    now-pet.giftMemory.lastGivenAt>=GIFT_MIN_GAP && now-pet.giftMemory.lastOfferedAt>=SOCIAL_KIND_GAP;
+}
+function chooseGiftItem(){
+  const candidates=giftItemIds().filter(id=>souvenirCount(id)>0).map(id=>{
+    const item=SOUVENIR_CATALOG[id],walk=pet.walkMemory.locations[item.location];
+    const target=walk?.targetMemory?.[item.targetId];
+    const chosenBefore=pet.giftMemory.givenCounts[id]||0;
+    let weight=18+(item.tags.includes(pet.favorite)?17:0)+
+      (pet.giftMemory.tastes[id]||0)*.65+(target?.affinity||0)*.55+ (walk?.affinity||0)*.20 +
+      Math.min(13,chosenBefore*2)+Math.min(22,treasureAffection(id)*.25);
+    // 同じ宝物を続けて贈るのも、その子の癖。ただし必ず同じものに固定はしない。
+    if(pet.giftMemory.lastGiftId===id)weight+=Math.min(18,5+pet.giftMemory.repeatStreak*3);
+    if(pet.giftMemory.displayed.includes(id))weight+=6;
+    if(item.rarity>1 && pet.curiosity>65)weight+=6;
+    if(chosenBefore>0&&pet.attachment>70)weight+=6;
+    return {id,weight:Math.max(2,weight)};
+  });
+  return candidates.length?weightedChoice(candidates):null;
+}
+function addSouvenirToInventory(s){
+  const item=SOUVENIR_CATALOG[s?.id];if(!item)return false;
+  pet.giftMemory.inventory[s.id]=clamp(souvenirCount(s.id)+1,0,999);
+  pet.giftMemory.found[s.id]=clamp((pet.giftMemory.found[s.id]||0)+1,0,99999);
+  renderGiftCollection();
+  return true;
+}
+// ゲーム内の宝物は小さなドット絵。操作アイコンの手描き素材とは区別します。
+const giftSprites={};
+for(const [id,item] of Object.entries(SOUVENIR_CATALOG)){
+  const image=new Image();image.src=`assets/souvenirs/${item.sprite}`;
+  image.onerror=()=>console.warn(`お土産画像を読み込めません: ${item.sprite}`);
+  giftSprites[id]=image;
+}
 
 // —— v20: 同じ対象にも3通りのふるまい。すべて実際の探索時にだけ選ぶ。——
 // [識別子, 動作の説明, 基本アニメ, 特徴的な仕草, 周囲の小さな演出, 気持ち, 印象の変化, 記念行動]
@@ -206,12 +443,15 @@ function normalizeWalkMemory(old){
 }
 const DEFAULT_ROOM_THEME = 'western';
 function validRoomTheme(id) { return Object.prototype.hasOwnProperty.call(ROOM_THEMES,id) ? id : DEFAULT_ROOM_THEME; }
+function roomThemeTitle(id){ const theme=ROOM_THEMES[validRoomTheme(id)]; return theme.title || `${theme.label}のおへや`; }
 // —— v14: 必要な画面にだけ移動する。ゲーム内の状態は切り替えません ——
 const APP_TABS=['home','room','fashion','notes'];
 let activeAppTab='home';
 function openAppTab(tab,{focus=false,scroll=true}={}){
   if(!APP_TABS.includes(tab))return;
   if(tab!=='home' && walkSession)endWalk(); // 別画面へ移ると安全に帰宅。見ていない間の散歩イベントは起こさない。
+  // v33: 別タブで目撃していない親愛行動を、思い出として勝手に記録しない。
+  if(tab!=='home' && socialVisit){socialVisit=null;pet.action='idle';pet.actionUntil=0;pet.targetX=pet.x;}
   activeAppTab=tab;
   for(const id of APP_TABS){
     const selected=id===tab;
@@ -233,11 +473,11 @@ function applyRoomTheme(){
   const url=`assets/rooms/${ROOM_THEMES[id].file}`;
   $('roomScene').style.backgroundImage=`url("${url}")`;
   document.querySelector('.intro-scene').style.backgroundImage=`url("${url}")`;
-  $('currentRoomTheme').textContent=`${ROOM_THEMES[id].label}のおへや`;
+  $('currentRoomTheme').textContent=roomThemeTitle(id);
   document.querySelectorAll('[data-room-theme]').forEach(button=>{
     const chosen=button.dataset.roomTheme===id;
     button.setAttribute('aria-pressed',String(chosen));
-    button.title=chosen?'今のおへや':`${ROOM_THEMES[button.dataset.roomTheme].label}のおへやにする`;
+    button.title=chosen?'今のおへや':`${roomThemeTitle(button.dataset.roomTheme)}にする`;
   });
 }
 function selectRoomTheme(id){
@@ -247,8 +487,8 @@ function selectRoomTheme(id){
   roomSpecialVisit=null;
   applyRoomTheme();
   renderWeather();
-  const status=$('roomThemeStatus');if(status)status.textContent=`${ROOM_THEMES[next].label}のおへやに切り替えました。`;
-  $('roomCaption').textContent=`おへやを${ROOM_THEMES[next].label}に模様替えしました。${pet.name}はいつもどおり過ごしています。`;
+  const status=$('roomThemeStatus');if(status)status.textContent=`${roomThemeTitle(next)}に切り替えました。`;
+  $('roomCaption').textContent=`おへやを「${roomThemeTitle(next)}」に模様替えしました。${pet.name}はいつもどおり過ごしています。`;
   save();
 }
 
@@ -259,16 +499,34 @@ const WEATHER_ICONS={sun:'☀',cloud:'☁',rain:'☂',snow:'❄'};
 const SEASONS={spring:{name:'春',months:[3,4,5]},summer:{name:'夏',months:[6,7,8]},autumn:{name:'秋',months:[9,10,11]},winter:{name:'冬',months:[12,1,2]}};
 const WEATHER_WEIGHTS={spring:[45,27,28,0],summer:[53,23,24,0],autumn:[42,34,24,0],winter:[30,31,19,20]};
 // ウィンドウの範囲は各320x200の背景絵に合わせてあります。
-const ROOM_WINDOWS={western:{x:53,y:27,w:66,h:77},japanese:{x:45,y:28,w:111,h:96},cute:{x:52,y:30,w:66,h:73},cyber:{x:41,y:29,w:114,h:94}};
+// v32 背景の窓領域に合わせた天気演出。背景そのものの描画サイズは320×200のまま。
+const ROOM_WINDOWS={
+  western:{x:4,y:43,w:61,h:73,shape:'rect'},
+  japanese:{x:124,y:38,w:80,h:109,shape:'rect'},
+  cute:{x:92,y:36,w:91,h:99,shape:'arch'},
+  cyber:{x:65,y:29,w:125,h:109,shape:'rect'},
+  forest:{x:16,y:42,w:101,h:84,shape:'ellipse'},
+  magic:{x:81,y:31,w:114,h:93,shape:'arch'},
+  ocean:{x:83,y:30,w:124,h:95,shape:'arch'},
+  starry:{x:99,y:30,w:129,h:102,shape:'arch'}
+};
 const SPECIAL_PLACES={
-  western:[{x:91,gesture:'window',action:'look',label:'窓から外を眺める'},
+  western:[{x:65,gesture:'window',action:'look',label:'窓から外を眺める'},
            {x:211,gesture:'rug',action:'happy',label:'ラグの模様を追う'}],
   japanese:[{x:98,gesture:'shoji',action:'look',label:'障子の向こうの気配を聞く'},
             {x:189,gesture:'tatami',action:'happy',label:'畳の上でゆっくり転がる'}],
   cute:[{x:105,gesture:'ribbon',action:'look',label:'壁のリボン飾りを眺める'},
         {x:225,gesture:'pattern',action:'play',label:'絨毯の柄を追いかける'}],
   cyber:[{x:86,gesture:'neon',action:'look',label:'窓のネオンを追う'},
-         {x:245,gesture:'monitor',action:'play',label:'モニターの光を追いかける'}]
+         {x:245,gesture:'monitor',action:'play',label:'モニターの光を追いかける'}],
+  forest:[{x:76,gesture:'forestWindow',action:'look',label:'丸窓の外の森を見る'},
+          {x:232,gesture:'plantShelf',action:'happy',label:'木の棚の植物を確かめる'}],
+  magic:[{x:83,gesture:'moonWindow',action:'look',label:'月の見える窓を見上げる'},
+         {x:225,gesture:'potionShelf',action:'play',label:'薬棚の小瓶を見比べる'}],
+  ocean:[{x:82,gesture:'porthole',action:'look',label:'丸窓の向こうの海を眺める'},
+         {x:224,gesture:'shellMobile',action:'play',label:'貝殻飾りの揺れを追いかける'}],
+  starry:[{x:83,gesture:'nightWindow',action:'look',label:'夜空の窓を見つめる'},
+          {x:225,gesture:'telescope',action:'play',label:'望遠鏡のそばで星を追いかける'}]
 };
 const WORLD_KEYS=['sun','cloud','rain','snow'];
 const newWorldMemory=()=>({weatherSeed:Math.floor(Math.random()*2147483646)+1,
@@ -322,8 +580,18 @@ function drawWeatherInWindow(time,context=ctx){
   const w=weatherForTime(),windowArea=ROOM_WINDOWS[pet.roomTheme];
   if(!windowArea)return;
   const {x,y,w:width,h:height}=windowArea;
+  const shape=windowArea.shape||'rect';
   context.save();context.imageSmoothingEnabled=false;
-  context.beginPath();context.rect(x,y,width,height);context.clip();
+  context.beginPath();
+  if(shape==='ellipse') context.ellipse(x+width/2,y+height/2,width/2,height/2,0,0,Math.PI*2);
+  else if(shape==='arch'){
+    context.moveTo(x,y+height);
+    context.lineTo(x,y+height*0.38);
+    context.quadraticCurveTo(x+width/2,y-height*0.28,x+width,y+height*0.38);
+    context.lineTo(x+width,y+height);
+    context.closePath();
+  } else context.rect(x,y,width,height);
+  context.clip();
   if(w.weather==='sun'){
     context.fillStyle=pet.roomTheme==='cyber'?'rgba(105,230,255,.38)':'rgba(255,246,178,.43)';
     for(let i=0;i<9;i++){
@@ -365,21 +633,27 @@ function specialActivityText(theme,spot,weather){
     western:{window:'窓に映る景色をじっと眺めています。',rug:'ラグの模様の上を、ぽんぽん跳ねています。'},
     japanese:{shoji:'障子の向こうの音に耳をすましています。',tatami:'畳の上で、ごろんと体を揺らしています。'},
     cute:{ribbon:'壁の飾りを、体を傾けて眺めています。',pattern:'絨毯の模様を追いかけ、くるりと回っています。'},
-    cyber:{neon:'ネオンの光を、じっと目で追っています。',monitor:'モニターの光が動くたびに、小さく跳ねています。'}
+    cyber:{neon:'ネオンの光を、じっと目で追っています。',monitor:'モニターの光が動くたびに、小さく跳ねています。'},
+    forest:{forestWindow:'丸窓の外の木々を、静かに見つめています。',plantShelf:'木の棚の植物を一つずつ確かめています。'},
+    magic:{moonWindow:'月の見える窓を見上げ、しばらく動きを止めています。',potionShelf:'薬棚の小瓶を気にして、くるりと見回しています。'},
+    ocean:{porthole:'丸窓の向こうで揺れる海を、じっと眺めています。',shellMobile:'貝殻飾りのゆらゆらした影を追いかけています。'},
+    starry:{nightWindow:'夜空の窓にきらめく星を、目で追っています。',telescope:'望遠鏡のそばで、星の気配を探すように首を傾げています。'}
   };
-  const opening=spot.gesture==='window'||spot.gesture==='shoji'||spot.gesture==='neon'?cloud:'';
+  const opening=['window','shoji','neon','forestWindow','moonWindow','porthole','nightWindow'].includes(spot.gesture)?cloud:'';
   const seasonTail={spring:'春の気配に興味があるのかもしれません。',summer:'夏の明るさが気になるようです。',
     autumn:'秋の空気を楽しんでいるようです。',winter:'冬らしい静かな時間です。'}[weather.season];
   return {observed:`${pet.name}は${opening}${base[theme][spot.gesture]}`,note:seasonTail};
 }
 function specialWeight(theme,spot,w){
   const memory=pet.worldMemory;
-  const calm=['window','shoji','neon','ribbon'].includes(spot.gesture);
+  const calm=['window','shoji','neon','ribbon','forestWindow','moonWindow','porthole','nightWindow'].includes(spot.gesture);
   let weight=18+(calm?pet.curiosity*.27:pet.activity*.25);
-  if(w.weather==='rain' && ['window','shoji','neon'].includes(spot.gesture))weight+=24;
-  if(w.weather==='snow' && ['window','shoji'].includes(spot.gesture))weight+=18;
-  if(w.weather==='sun' && ['rug','tatami','pattern'].includes(spot.gesture))weight+=15;
+  if(w.weather==='rain' && ['window','shoji','neon','forestWindow','moonWindow','porthole','nightWindow'].includes(spot.gesture))weight+=24;
+  if(w.weather==='snow' && ['window','shoji','forestWindow','moonWindow','nightWindow'].includes(spot.gesture))weight+=18;
+  if(w.weather==='sun' && ['rug','tatami','pattern','plantShelf','potionShelf','shellMobile','telescope'].includes(spot.gesture))weight+=15;
   if(w.season==='winter' && spot.gesture==='tatami')weight+=14;
+  if(w.season==='summer' && spot.gesture==='porthole')weight+=10;
+  if(w.season==='winter' && ['moonWindow','nightWindow'].includes(spot.gesture))weight+=10;
   if(pet.quirk==='窓辺を気にする' && calm)weight+=17;
   weight+=memory.weatherTastes[w.weather]*.8+memory.roomTastes[theme]*.7;
   weight+=Math.min(12,memory.roomVisits[theme]*1.3);
@@ -397,7 +671,7 @@ function beginRoomSpecial(now,forced=false){
   memory.lastSpecialAt=now;
   startAction('walk',duration,'curious',spot.x);
   pet.nextDecision=now+duration+800;
-  $('roomCaption').textContent=`${pet.name}は${ROOM_THEMES[theme].label}のおへやの${spot.label}ために、歩き始めました。`;
+  $('roomCaption').textContent=`${pet.name}は${roomThemeTitle(theme)}の${spot.label}へ向かい始めました。`;
   return true;
 }
 function updateRoomSpecial(now){
@@ -419,11 +693,11 @@ function updateRoomSpecial(now){
     const safe=v.weather==='rain'&&pet.caution>68?false:true;
     adjustEmotion({interest:1,safety:safe?1:0,wariness:safe?-1:1});
     recordMoment(`room_${v.theme}`,text.observed,
-      `${ROOM_THEMES[v.theme].label}のおへやでの特別な行動を初めて観察しました。${text.note}`);
+      `${roomThemeTitle(v.theme)}での特別な行動を初めて観察しました。${text.note}`);
     recordMoment(`weather_${v.weather}`,text.observed,
       `${SEASONS[v.season].name}の${WEATHER_NAMES[v.weather]}の日に見られた行動です。`);
     if(mem.roomVisits[v.theme]===3)discover(`room-habit-${v.theme}`,
-      `${pet.name}は${ROOM_THEMES[v.theme].label}のおへやで、気になるものを何度も見つけているようです。`);
+      `${pet.name}は${roomThemeTitle(v.theme)}で、気になるものを何度も見つけているようです。`);
     showThought(v.spot.action==='play'?'♪':'…？');
     renderUI();save();
   }else if(v.stage==='staying'&&now>=v.until){
@@ -526,6 +800,23 @@ const MOMENT_DEFINITIONS = {
   social_walk_offer:{category:'interaction',label:'初めてお散歩に誘ってくれた日'},
   social_walk_answer:{category:'interaction',label:'お散歩のお誘いに応えた日'},
   social_company_first:{category:'interaction',label:'初めてただ隣で過ごした日'},
+  bond_home_approach:{category:'interaction',label:'自分から甘えてくれた日'},
+  bond_home_trust:{category:'interaction',label:'安心してそばで休んだ日'},
+  bond_walk_approach:{category:'walk',label:'おさんぽで駆け寄ってきた日'},
+  bond_walk_trust:{category:'walk',label:'おさんぽで安心して休んだ日'},
+  bond_habit_approach:{category:'interaction',label:'自分から甘える癖に気づいた日'},
+  bond_habit_trust:{category:'interaction',label:'信頼の仕草に気づいた日'},
+  gift_first:{category:'gift',label:'初めてプレゼントをくれた日'},
+  // v30：実際に飾った／見つめた／続けて贈ったときだけ新しく記録する。
+  ...Object.fromEntries(Object.keys(SOUVENIR_CATALOG).filter(id=>SOUVENIR_CATALOG[id].rarity>=2&&!["button","glass","leaf"].includes(id)).map(id=>
+    [`walk_v29_first_${id}`,{category:'walk',label:'新しいおみやげとの出会い'}])),
+  ...Object.fromEntries(Object.keys(SOUVENIR_CATALOG).flatMap(id=>[
+    [`gift_first_${id}`,{category:'gift',label:'初めてくれた宝物'}],
+    [`gift_repeat_${id}`,{category:'gift',label:'何度も贈ってくれる宝物'}],
+    [`gift_longhabit_${id}`,{category:'gift',label:'いつもの贈りもの'}],
+    [`gift_display_${id}`,{category:'gift',label:'贈りものを飾った日'}],
+    [`gift_admire_${id}`,{category:'gift',label:'宝物を見つめた日'}]
+  ])),
   social_pet_offer:{category:'interaction',label:'そっとなでてほしそうにした日'},
   social_favorite_play:{category:'interaction',label:'お気に入りの遊びを繰り返した日'},
   room_western:{category:'world',label:'洋風のおへやでの発見'},
@@ -545,7 +836,7 @@ const MOMENT_DEFINITIONS = {
   secret_cushion:{category:'secret',label:'クッションのひみつ'},
   secret_tap:{category:'secret',label:'気になるものをこつこつ'}
 };
-const MOMENT_CATEGORIES = {interaction:'交流',object:'ものとの出会い',world:'季節とおへや',fashion:'おめかし',secret:'ひみつの習性',walk:'おさんぽ',gesture:'しぐさ',personality:'この子らしさ'};
+const MOMENT_CATEGORIES = {interaction:'交流',object:'ものとの出会い',world:'季節とおへや',fashion:'おめかし',secret:'ひみつの習性',walk:'おさんぽ',gesture:'しぐさ',personality:'この子らしさ',gift:'贈りもの'};
 const MOMENT_MAX_ENTRIES = 90;
 const newMomentJournal = () => ({startedAt:Date.now(),entries:[],seen:[],approachesSinceStart:0,lastApproachRecord:0,prior:{play:false,food:false,near:false,call:false}});
 // 同じ思い出が次の行動の重みになる。過去の経験を一律の「なつき度」にはしない。
@@ -574,7 +865,7 @@ function renderMemoryHint() {
 }
 
 // v21: お誘いの頻度と体験回数だけ永続化。未完了のお誘いは保存しない。
-const SOCIAL_KINDS=['play','pet','walk','company'];
+const SOCIAL_KINDS=['play','pet','walk','company','gift'];
 function newSocialMemory(){return {lastAt:0,byKind:Object.fromEntries(SOCIAL_KINDS.map(k=>[k,0])),
   counts:Object.fromEntries(SOCIAL_KINDS.map(k=>[k,0])),
   answered:Object.fromEntries(SOCIAL_KINDS.map(k=>[k,0])), ignored:0};}
@@ -616,7 +907,9 @@ function renderPettingHint(){
     if(placingType)help.textContent='家具の場所をタップして決めてください。配置中はなでる操作をお休みします。';
     else if(asking)help.textContent=`${pet.name}がこちらをじっと見ています。もう一度なでてほしいのかもしれません。`;
     else if(socialRequest?.kind==='company'&&socialRequest?.stage==='wait')help.textContent=`${pet.name}がそばでくつろいでいます。そっとなでても、一緒に眺めていても大丈夫です。`;
-    else if(socialVisit?.stage==='resting')help.textContent=`${pet.name}が自分からそばに来ています。タップや指でなぞって、そっとなでられます。`;
+    else if(socialVisit?.stage==='resting')help.textContent=pet.bondStyle.type==='approach'?
+      `${pet.name}が自分から体を寄せています。タップや指でなぞって、そっとなでられます。`:
+      `${pet.name}は安心した様子でそばにいます。起こさず見守っても、そっとなでても大丈夫です。`;
     else help.textContent='ペットを直接タップ、または指でそっとなぞってみましょう。';
   }
   if(button){button.querySelector('span:last-child').textContent=asking?'おねだりに応える':'そっとなでる';
@@ -1037,7 +1330,12 @@ function selectLittleGesture(now,place='home'){
       const previous=pet.gestureMemory.lastAt[id];
       if(previous>0&&now-previous<90000)weight*=0.12;
       if(previous>0&&now-previous<22000)weight=0;
-      if(id==='nuzzle'||id==='beg')weight*=clamp((pet.sociability+pet.emotions.connection)/130,.3,1.5);
+      if(id==='nuzzle'||id==='beg'){
+        if(pet.bondStyle.type==='trust'||bondClosenessStage()===0)weight=0;
+        else weight*=clamp((pet.sociability+pet.emotions.connection)/130,.3,1.5)*
+          (bondClosenessStage()===2?1.5:.55)*(id==='beg'&&bondClosenessStage()<2?0:1);
+      }
+      if(id==='sitBeside')weight*=pet.bondStyle.type==='trust'?1.85:.75;
       if(id==='peek'||id==='hesitate')weight*=clamp(pet.caution/55,.3,1.8);
       if(id==='rollover'||id==='doze')weight*=clamp((pet.tired-20)/50,.15,1.5);
       if(id==='tumble'||id==='spin')weight*=clamp(pet.activity/65,.2,1.5)*personalityFactor('mischievous',.7,1.65);
@@ -1086,7 +1384,8 @@ function beginLittleSequence(now,place='home',requestedGroup=null){
   if(place!=='home'||gestureSequence||gestureState||walkSession)return false;
   const weights=gestureScores(now);
   const group=requestedGroup||weightedChoice(Object.entries(weights).map(([id,weight])=>({id,weight})));
-  const stages=GESTURE_SEQUENCES[group];
+  const stages=group==='affection'&&pet.bondStyle.type==='trust'?['glance','approach','sitBeside']:
+    group==='affection'&&bondClosenessStage()===0?['glance','sitBeside']:GESTURE_SEQUENCES[group];
   if(!stages)return false;
   gestureSequence={group,index:0,stages};
   if(!runNextLittleSequenceStage(now)){gestureSequence=null;return false;}
@@ -1187,6 +1486,59 @@ function normalizeTemperament(old){
  for(const key of keys){seed=(Math.imul(seed,1664525)+1013904223)>>>0;fallback[key]=24+seed%61;}
  return Object.fromEntries(keys.map(key=>[key,clamp(Number.isFinite(old?.[key])?old[key]:fallback[key],12,94)]));
 }
+// v33: A（甘えて近づく）／B（そばで安心する）は生まれ持った傾向として固定する。
+// 見えている仲良し度は交流経験から計算し、数値ゲージにはしない。
+const BOND_STYLES=Object.freeze({approach:'甘えて近づく',trust:'安心して過ごす'});
+function inheritedBondStyle(){
+  const variability=pet.temperament?.variability??50;
+  const warmth=pet.sociability*.40+(100-pet.caution)*.24+pet.activity*.16+
+    pet.attachment*.12+variability*.08+(pet.pettingMemory?.innate||0)*.16;
+  return warmth>=53?'approach':'trust';
+}
+const newBondStyleMemory=()=>({type:null,homeEvents:0,walkEvents:0,lastHomeAt:0,lastWalkAt:0,noticed:false});
+function normalizeBondStyleMemory(old){
+  const source=old&&typeof old==='object'?old:{};
+  const type=BOND_STYLES[source.type]?source.type:inheritedBondStyle();
+  return {type,
+    homeEvents:clamp(Number(source.homeEvents)||0,0,9999),
+    walkEvents:clamp(Number(source.walkEvents)||0,0,9999),
+    lastHomeAt:Number.isFinite(source.lastHomeAt)&&source.lastHomeAt>0?source.lastHomeAt:0,
+    lastWalkAt:Number.isFinite(source.lastWalkAt)&&source.lastWalkAt>0?source.lastWalkAt:0,
+    noticed:!!source.noticed};
+}
+function bondExperienceCount(){
+  return Math.min(10,pet.pettingMemory?.accepted||0)+
+    Math.min(8,pet.reactionStats?.call||0)+
+    Math.min(8,memoryCount('calmTogether'))+
+    Math.min(6,memoryCount('sharedYarn'))+
+    Math.min(5,pet.walkMemory?.totalWalks||0)+
+    Math.min(5,pet.bondMemory?.invitationAccepted||0);
+}
+function bondClosenessStage(){
+  const lived=bondExperienceCount(),e=pet.emotions;
+  if(lived>=11&&e.safety>=54&&e.connection>=48&&e.wariness<73)return 2;
+  if(lived>=3&&e.safety>=36&&e.wariness<82)return 1;
+  return 0;
+}
+// 同じ種類の愛情表現を何回か実際に目撃してから、個性として伝える。
+function noteBondMoment(place,description,now=Date.now()){
+  const memory=pet.bondStyle;
+  if(place==='walk')memory.walkEvents=Math.min(9999,memory.walkEvents+1);
+  else memory.homeEvents=Math.min(9999,memory.homeEvents+1);
+  const type=memory.type,key=`bond_${place}_${type}`;
+  const title=type==='approach'?'自分から近づいてきた日':'安心してそばで過ごした日';
+  recordMoment(key,description,'この子が自分の意思で見せた、実際のふるまいです。',{title});
+  if(!memory.noticed && memory.homeEvents+memory.walkEvents>=3){
+    memory.noticed=true;
+    const observation=type==='approach'?
+      `${pet.name}は、そばに来たり甘えたりして親しさを伝えることが増えてきました。`:
+      `${pet.name}は、そばで落ち着いたり安心して眠ったりして親しさを伝えるようです。`;
+    recordMoment(`bond_habit_${type}`,observation,
+      'どちらの懐き方も、同じくらい大切な親しさの表現です。',{title:'この子なりの懐き方'});
+  }
+  renderPersonalityHint();save();
+}
+
 const newPersonalityMemory=()=>({counts:{},lastAt:{},learned:[],lastObservation:'',lastActivityMode:null,lastActivityAt:0});
 function normalizePersonalityMemory(old){
  const source=old&&typeof old==='object'?old:{};
@@ -1239,9 +1591,18 @@ function observePersonality(id,description,now=Date.now()){
 function renderPersonalityHint(){
  const el=$('personalityHint');if(!el)return;
  const learned=pet.personalityMemory.learned;
- if(!learned.length){el.textContent='まだこの子のことを観察しているところです。同じ仕草や選び方を何度か見ると、小さな気づきが増えます。';return;}
+ const foundStyle=pet.bondStyle?.noticed;
+ if(!learned.length&&!foundStyle){el.textContent='まだこの子のことを観察しているところです。同じ仕草や選び方を何度か見ると、小さな気づきが増えます。';return;}
  el.replaceChildren();
  const intro=document.createElement('p');intro.textContent='一緒に暮らしていて、こんな傾向に気づきました。';el.appendChild(intro);
+ if(foundStyle){
+   const p=document.createElement('p');const strong=document.createElement('strong');
+   strong.textContent='この子なりの懐き方：';
+   const message=pet.bondStyle.type==='approach'?
+     '自分から近づき、すり寄ったり甘えたりして気持ちを伝えてくれます。':
+     'こちらのそばで落ち着いたり、安心して眠ったりすることで信頼を見せてくれます。';
+   p.append(strong,document.createTextNode(message));el.appendChild(p);
+ }
  for(const id of learned.slice(-5).reverse()){
    const p=document.createElement('p');const strong=document.createElement('strong');
    strong.textContent=`${PERSONALITY_TENDENCIES[id].label}かも：`;
@@ -1285,7 +1646,7 @@ function newPet() {
     activity: 25 + Math.floor(Math.random() * 65),
     attachment: 25 + Math.floor(Math.random() * 65),
     favorite: rand(likes), quirk: rand(quirkList),
-    hunger: 30 + Math.random() * 25, tired: 10 + Math.random() * 15,
+    hunger: 30 + Math.random() * 25, hungerBalanceFixedV321: true, tired: 10 + Math.random() * 15,
     comfort, mood: 'curious',
     // 学習で動く「現在の気持ち」。生まれつきの性格とは別。
     emotions: {
@@ -1296,9 +1657,9 @@ function newPet() {
     },
     reactionStats: { call: 0, play: 0, near: 0, recoil: 0 },
     x: 160, targetX: 160, facing: 1,
-    action: 'idle', actionUntil: 0, nextDecision: 0,
+    action: 'idle', actionUntil: 0, nextDecision: 0, dailyFlow:{recent:[],lastWindowAt:0,lastRainAt:0,postPlayUntil:0},
     lastRealTime: Date.now(), dayStarted: Date.now(), day: 1,
-    foodCount: 0, playCount: 0, socialMemory:newSocialMemory(), walkMemory:newWalkMemory(), gestureMemory:newGestureMemory(), temperament:newTemperament(), personalityMemory:newPersonalityMemory(), pettingMemory:newPettingMemory(), wardrobe:newWardrobe(), fashionMemory:newFashionMemory(), secretMemory:newSecretMemory(), bondMemory:newBondMemory(), worldMemory:newWorldMemory(), roomItems: initialRoomItems(), objectMemory: initialObjectMemory(), roomTraces: initialRoomTraces(), placeMemory: newPlaceMemory(), placeJournal: newPlaceJournal(), momentJournal: newMomentJournal(), discoveries: [],
+    foodCount: 0, playCount: 0, socialMemory:newSocialMemory(), walkMemory:newWalkMemory(), giftMemory:newGiftMemory(), gestureMemory:newGestureMemory(), temperament:newTemperament(), personalityMemory:newPersonalityMemory(), bondStyle:newBondStyleMemory(), pettingMemory:newPettingMemory(), wardrobe:newWardrobe(), fashionMemory:newFashionMemory(), secretMemory:newSecretMemory(), bondMemory:newBondMemory(), worldMemory:newWorldMemory(), roomItems: initialRoomItems(), objectMemory: initialObjectMemory(), roomTraces: initialRoomTraces(), placeMemory: newPlaceMemory(), placeJournal: newPlaceJournal(), momentJournal: newMomentJournal(), discoveries: [],
     logs: ['小さな生き物が部屋にやってきました。']
   };
 }
@@ -1357,6 +1718,15 @@ for (const [type, info] of Object.entries(ROOM_ITEM_TYPES)) {
 function normalizePet() {
   // 旧バージョンのセーブデータへの、破壊しない追加・補完
   pet.roomTheme=validRoomTheme(pet.roomTheme); // v9以前は洋風を既定値にする
+  // v36: 行動履歴の追加は旧セーブにも安全。ほかの記憶を変更しない。
+  const oldFlow=pet.dailyFlow&&typeof pet.dailyFlow==='object'?pet.dailyFlow:{};
+  const flowKinds=['special','social','treasure','fashion','secret','gesture','place','item','walk','look','idle','collect','sniff','rest','hunger'];
+  pet.dailyFlow={
+    recent:Array.isArray(oldFlow.recent)?oldFlow.recent.filter(x=>x&&flowKinds.includes(x.kind)&&Number.isFinite(x.at)).slice(-7):[],
+    lastWindowAt:Number.isFinite(oldFlow.lastWindowAt)?oldFlow.lastWindowAt:0,
+    lastRainAt:Number.isFinite(oldFlow.lastRainAt)?oldFlow.lastRainAt:0,
+    postPlayUntil:Number.isFinite(oldFlow.postPlayUntil)?oldFlow.postPlayUntil:0
+  };
   const oldWorld=pet.worldMemory && typeof pet.worldMemory==='object' ? pet.worldMemory : {};
   const defaultWorld=newWorldMemory();
   const normalizeTaste=(source,defaults,ids)=>Object.fromEntries(ids.map(id=>[id,
@@ -1500,10 +1870,12 @@ function normalizePet() {
   pet.bondMemory.lastInvitationAt=Number.isFinite(oldBond.lastInvitationAt)?oldBond.lastInvitationAt:0;
   pet.socialMemory=normalizeSocialMemory(pet.socialMemory);
   pet.walkMemory=normalizeWalkMemory(pet.walkMemory);
+  pet.giftMemory=normalizeGiftMemory(pet.giftMemory);
   pet.gestureMemory=normalizeGestureMemory(pet.gestureMemory);
   pet.temperament=normalizeTemperament(pet.temperament);
   pet.personalityMemory=normalizePersonalityMemory(pet.personalityMemory);
   pet.pettingMemory=normalizePettingMemory(pet.pettingMemory);
+  pet.bondStyle=normalizeBondStyleMemory(pet.bondStyle);
   pet.wardrobe = normalizeWardrobe(pet.wardrobe);
   pet.fashionMemory=normalizeFashionMemory(pet.fashionMemory);
   pet.secretMemory=normalizeSecretMemory(pet.secretMemory);
@@ -1519,8 +1891,9 @@ function normalizePet() {
 normalizePet();
 beginWearSession();
 
+let backupRestoreInProgress=false; // ページ移動時の自動保存による復元データの上書きを防ぐ
 function save() {
-  if(onboardingActive) return; // 出会いが終わるまで仮の個体をセーブしない。
+  if(onboardingActive || backupRestoreInProgress) return; // 出会いが終わるまで仮の個体をセーブしない。
   pet.lastRealTime = Date.now();
   pet.discoveries = [...discovered];
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(pet)); }
@@ -1708,6 +2081,8 @@ function renderUI() {
   renderPettingHint();
   refreshTodayHighlight();
   renderWalkCollection();
+  renderGiftCollection();
+  updateTreasureShelf();
 }
 
 // 48x40px のスプライトシート：横4コマ × 縦10動作。旧版の画像素材をそのまま使用。
@@ -1748,6 +2123,7 @@ function drawPet(time) {
   drawWeatherInWindow(time);
   drawRoomItems(time);
   drawWalkSouvenirsInRoom();
+  drawTreasureShelf(time);
   let image = spriteSheets[pet.palette] || spriteSheets['薄い水色'];
   if (!image || !image.complete || !image.naturalWidth) return;
   const action = spriteAction();
@@ -1819,6 +2195,13 @@ function drawPet(time) {
   }
   ctx.restore();
   // 持ち運び中の毛糸玉。実物の家具スプライトを一つだけ表示する。
+  if(socialRequest?.kind==='gift' && ['bring','wait'].includes(socialRequest.stage)){
+    const id=socialRequest.itemId,image=giftSprites[id];
+    if(image?.complete&&image.naturalWidth){
+      const x=socialRequest.stage==='bring' ? Math.round(pet.x+pet.facing*16-14) : Math.round(pet.x+20);
+      ctx.drawImage(image,x,144,28,28);
+    }
+  }
   if(memoryInvitation?.stage==='bring'){
     const ball=objectSprites.ball;
     if(ball?.complete && ball.naturalWidth) ctx.drawImage(ball,Math.round(pet.x+pet.facing*18-13),128,26,26);
@@ -1934,6 +2317,8 @@ function startAction(action, duration, mood, destination = pet.x) {
   pet.actionUntil = Date.now() + duration;
   pet.mood = mood;
   pet.targetX = clamp(destination, 45, 275);
+  // プレイヤーとの遊びを含め、遊び終わったあとの静かな時間を覚える。
+  if(action==='play' && pet.dailyFlow) pet.dailyFlow.postPlayUntil=Math.max(pet.dailyFlow.postPlayUntil,Date.now()+duration+90000);
 }
 function performReaction({action = 'look', kind = 'tilt', duration = 2600, mood = 'curious',
                           destination = pet.x, gesture, caption, thought = '…', log}) {
@@ -2158,6 +2543,7 @@ function renderPlaceJournal() {
     ['fashion','おめかし',momentEntries.filter(e=>MOMENT_DEFINITIONS[e.key]?.category==='fashion').length],
     ['secret','ひみつの習性',momentEntries.filter(e=>MOMENT_DEFINITIONS[e.key]?.category==='secret').length],
     ['walk','おさんぽ',momentEntries.filter(e=>MOMENT_DEFINITIONS[e.key]?.category==='walk').length],
+    ['gift','贈りもの',momentEntries.filter(e=>MOMENT_DEFINITIONS[e.key]?.category==='gift').length],
     ['gesture','しぐさ',momentEntries.filter(e=>MOMENT_DEFINITIONS[e.key]?.category==='gesture').length],
     ['personality','この子らしさ',momentEntries.filter(e=>MOMENT_DEFINITIONS[e.key]?.category==='personality').length]];
   for(const [category,label,count] of filterList){
@@ -2560,43 +2946,59 @@ function startAutonomousItemAction(now) {
   return true;
 }
 // 呼ばれたときの反応とは別に、ペットが自分の意思でこちらへ歩く。
+// v33: ペットの側から始まる、A/B別の親愛行動。通常の行動を邪魔しない。
+const BOND_HOME_GAP=110*1000;
 function beginAutonomousSocialVisit(now){
-  if(socialVisit || objectVisit || placeVisit || reaction || pettingBeg || pet.tired>70) return false;
-  if(Math.abs(pet.x-160)<38 || pet.emotions.wariness>76) return false;
-  const learnedCompany=Math.min(24,memoryCount('answeredCall')*4+memoryCount('calmTogether')*3);
-  const chance=clamp(((pet.sociability*0.38+pet.emotions.connection*0.48+pet.emotions.safety*0.22-pet.emotions.wariness*0.25+learnedCompany)/240)*personalityFactor('affectionate',.7,1.7),0.04,0.46);
-  if(Math.random()>chance) return false;
-  const destination=pet.x<160?150:170;
-  const duration=Math.max(1300,Math.abs(destination-pet.x)/38*1000+850);
-  socialVisit={stage:'approach',until:now+duration+600};
+  if(onboardingActive||activeAppTab!=='home'||walkSession||socialRequest||socialVisit||objectVisit||placeVisit||
+     secretVisit||roomSpecialVisit||memoryInvitation||gestureState||gestureSequence||reaction||
+     pettingBeg||placingType||pet.action==='sleep'||pet.tired>77||pet.hunger>84||pet.emotions.wariness>76)return false;
+  const stage=bondClosenessStage(),type=pet.bondStyle.type;
+  if(stage<1||now-pet.bondStyle.lastHomeAt<BOND_HOME_GAP)return false;
+  const chance=clamp((stage===2?.24:.16)+(pet.emotions.connection-50)/580, .10,.36);
+  if(Math.random()>chance)return false;
+  const destination=type==='approach'?(pet.x<160?151:169):(pet.x<160?189:211);
+  const duration=Math.max(1100,Math.abs(destination-pet.x)/38*1000+700);
+  socialVisit={stage:'approach',type,level:stage,until:now+duration+500};
+  pet.bondStyle.lastHomeAt=now;
   startAction('walk',duration,'calm',destination);
-  pet.nextDecision=now+duration+1600;
-  $('roomCaption').textContent=`${pet.name}はふとこちらに気づき、自分から歩いてきました。`;
+  pet.nextDecision=now+duration+1700;
+  $('roomCaption').textContent=type==='approach'?
+    `${pet.name}はこちらに気づいて、少し弾むように近づいてきます。`:
+    `${pet.name}はこちらをちらりと見てから、安心できる場所へ歩いていきます。`;
   return true;
 }
 function updateAutonomousSocialVisit(now){
-  if(!socialVisit) return;
-  if(socialVisit.stage==='approach' && (Math.abs(pet.x-pet.targetX)<2.5 || now>=socialVisit.until)){
+  if(!socialVisit)return;
+  const visit=socialVisit;
+  if(visit.stage==='approach'&&(Math.abs(pet.x-pet.targetX)<2.5||now>=visit.until)){
     pet.x=pet.targetX;
-    socialVisit.stage='resting';socialVisit.until=now+4200;
-    startAction('idle',4200,'calm',pet.x);
-    pet.nextDecision=now+4700;
-    adjustEmotion({safety:1,connection:1,wariness:-1});
+    visit.stage='resting';visit.until=now+(visit.level===2?6900:5100);
+    const active=visit.type==='approach';
+    const action=active?'happy':visit.level===2?'sleep':'idle';
+    startAction(action,visit.until-now,active?'happy':'calm',pet.x);
+    pet.nextDecision=visit.until+1200;
+    adjustEmotion({safety:active?1:3,connection:2,wariness:-2});
     rememberSharedExperience('calmTogether');
-    $('roomCaption').textContent=`${pet.name}は自分からこちらへ来て、しばらくそばにいます。`;
+    const description=active?
+      (visit.level===2?`${pet.name}は自分からすり寄り、こちらを見上げてもう少し甘えたそうにしています。`:
+        `${pet.name}は自分から近づいて、体をそっと寄せてきました。`):
+      (visit.level===2?`${pet.name}はそばにいることを確かめると、安心して小さく寝息を立て始めました。`:
+        `${pet.name}はこちらのそばで、緊張をほどいてゆっくりくつろいでいます。`);
+    $('roomCaption').textContent=description;
+    showThought(active?'♡':'すぅ…');
     rememberSpontaneousApproach(now);
-    observePersonality('affectionate',`${pet.name}は自分からこちらへ来て、しばらくそばにいました。`,now);
-    maybeInviteToPet(now,'arrival');
-    renderUI();save();
-  }else if(socialVisit.stage==='resting' && now>=socialVisit.until){
-    socialVisit=null;
+    noteBondMoment('home',description,now);
+    if(active)observePersonality('affectionate',description,now);
+    else observePersonality('relaxed',description,now);
+    renderPettingHint();renderUI();save();
+  }else if(visit.stage==='resting'&&now>=visit.until){
+    socialVisit=null;renderPettingHint();
   }
 }
-
 // —— v15: 直接なでる。タップ・スワイプ・ボタンのいずれからも同じ処理を使います ——
 function maybeInviteToPet(now,reason='after_pet'){
   const m=pet.pettingMemory;
-  if(socialRequest||m.accepted===0||pet.tired>80||pet.hunger>88||pet.emotions.wariness>68)return false;
+  if(pet.bondStyle.type!=='approach'||bondClosenessStage()<1||socialRequest||m.accepted===0||pet.tired>80||pet.hunger>88||pet.emotions.wariness>68)return false;
   const chance=clamp((.14+m.accepted*.025+Math.max(0,pettingPreference())*.0024)*personalityFactor('affectionate',.65,1.45),0,.48);
   if(Math.random()>chance)return false;
   return beginSocialRequest(now,'pet',{afterPet:true});
@@ -2686,7 +3088,7 @@ function strokePet(mode='tap'){
 }
 
 // —— v21: 自発的な交流の共通状態機械 ——
-const SOCIAL_LABELS={play:'いっしょに遊びたい',pet:'なでてほしい',walk:'お外が気になる',company:'ただ、そばにいたい'};
+const SOCIAL_LABELS={play:'いっしょに遊びたい',pet:'なでてほしい',walk:'お外が気になる',company:'ただ、そばにいたい',gift:'ちいさな贈りもの'};
 const SOCIAL_MIN_GAP=3*60*1000, SOCIAL_KIND_GAP=5*60*1000;
 function socialRequestAllowed(now,kind,{afterPet=false}={}){
  if(!SOCIAL_KINDS.includes(kind)||socialRequest||onboardingActive||walkSession||placingType||
@@ -2696,16 +3098,18 @@ function socialRequestAllowed(now,kind,{afterPet=false}={}){
  const mem=pet.socialMemory;
  if(now-mem.lastAt<SOCIAL_MIN_GAP||now-mem.byKind[kind]<SOCIAL_KIND_GAP)return false;
  if(kind==='play'&&(!findRoomItem('ball')||memoryCount('sharedYarn')===0))return false;
- if(kind==='pet'&&(pet.pettingMemory.accepted===0||pettingPreference()<12||pet.emotions.safety<38))return false;
+ if(kind==='pet'&&(pet.bondStyle.type==='trust'||bondClosenessStage()===0||pet.pettingMemory.accepted===0||pettingPreference()<12||pet.emotions.safety<38))return false;
+ if(kind==='gift'&&!canOfferGift(now))return false;
  return true;
 }
 function socialWeights(){
  const e=pet.emotions,t=tendencyScores(),m=pet.pettingMemory;
  return [
   {id:'play',weight:findRoomItem('ball')&&memoryCount('sharedYarn')>0?Math.max(2,9+e.interest*.22+pet.activity*.11+t.mischievous*.12+memoryCount('sharedYarn')*1.8-pet.tired*.28):0},
-  {id:'pet',weight:m.accepted>0?Math.max(2,8+e.connection*.22+e.safety*.11+t.affectionate*.15+m.affinity*.17-e.wariness*.24):0},
+  {id:'pet',weight:pet.bondStyle.type==='approach'&&bondClosenessStage()>=1&&m.accepted>0?Math.max(2,8+e.connection*.22+e.safety*.11+t.affectionate*.15+m.affinity*.17-e.wariness*.24)*1.45:0},
   {id:'walk',weight:Math.max(3,10+e.interest*.21+pet.curiosity*.12+pet.activity*.09-pet.tired*.25)},
-  {id:'company',weight:Math.max(5,15+e.connection*.25+e.safety*.2+t.relaxed*.13+t.affectionate*.13-e.wariness*.2)}
+  {id:'company',weight:Math.max(5,15+e.connection*.25+e.safety*.2+t.relaxed*.13+t.affectionate*.13-e.wariness*.2)*(pet.bondStyle.type==='trust'?1.5:.72)},
+  {id:'gift',weight:canOfferGift()?Math.max(3,6+e.connection*.14+pet.attachment*.13+t.collector*.16+pet.sociability*.09-e.wariness*.17):0}
  ];
 }
 function maybeBeginSocialRequest(now){
@@ -2722,17 +3126,20 @@ function maybeBeginSocialRequest(now){
 }
 function beginSocialRequest(now,kind,options={}){
  if(!socialRequestAllowed(now,kind,options))return false;
+ const selectedGift=kind==='gift'?chooseGiftItem():null;
+ if(kind==='gift'&&!selectedGift)return false;
  const mem=pet.socialMemory;
  mem.lastAt=now;mem.byKind[kind]=now;mem.counts[kind]++;
+ if(kind==='gift')pet.giftMemory.lastOfferedAt=now;
  pet.bondMemory.lastInvitationAt=now;
  const delay=options.afterPet&&reaction?Math.max(0,reaction.until-now):0;
  socialRequest={kind,stage:'prepare',until:now+delay+1800+Math.random()*1300,
-  started:now,waitingUntil:0,lastWaitCue:0,walkChooser:false};
+  started:now,waitingUntil:0,lastWaitCue:0,walkChooser:false,itemId:selectedGift};
  pet.nextDecision=Math.max(pet.nextDecision,socialRequest.until+500);
  if(!options.afterPet){
   cancelLittleGestures();
   startAction('look',socialRequest.until-now,'curious');
-  $('roomCaption').textContent=kind==='walk'?`${pet.name}は窓の方を見て、それからこちらを振り返りました。`:
+  $('roomCaption').textContent=kind==='gift'?`${pet.name}は部屋の宝物をじっと見て、何か考えているようです。`:kind==='walk'?`${pet.name}は窓の方を見て、それからこちらを振り返りました。`:
    pet.caution>70?`${pet.name}は何度かこちらを見ては、少し迷っているようです。`:
    `${pet.name}は少し考えているように、こちらをちらっと見ています。`;
   showThought('…？');
@@ -2743,7 +3150,8 @@ function socialRequestCaption(kind){
  return {play:`${pet.name}は毛糸玉をそばへ運び、こちらを見ています。`,
  pet:`${pet.name}はそばに寄って、体をそっと傾けています。`,
  walk:`${pet.name}は窓とこちらを交互に見ています。外が気になるのかもしれません。`,
- company:`${pet.name}は何も求めず、ただ隣でくつろいでいます。`}[kind];
+ company:`${pet.name}は何も求めず、ただ隣でくつろいでいます。`,
+ gift:`${pet.name}は${SOUVENIR_CATALOG[socialRequest?.itemId]?.name||'宝物'}をこちらの前に置き、じっと見つめています。`}[kind];
 }
 function socialRequestApproach(now,position){
  const dest=clamp(position,45,275),duration=Math.max(1000,Math.abs(dest-pet.x)/38*1000+300);
@@ -2765,6 +3173,11 @@ function socialWait(now){
    memoryInvitation={stage:'offering'};
    recordMoment('play_invitation',`${pet.name}は毛糸玉を自分で運び、こちらを見つめました。`,
      '一緒に遊んだ経験から、自分から遊びを誘ってくれたのかもしれません。');
+ }else if(r.kind==='gift'){
+   const item=SOUVENIR_CATALOG[r.itemId];
+   if(!item||souvenirCount(r.itemId)<1){cancelSocialRequest('item_lost');return;}
+   $('roomCaption').textContent=`${pet.name}は${item.name}をあなたの前にそっと置きました。`;
+   pet.nextDecision=r.waitingUntil+1000;
  }else if(r.kind==='pet'){
    pet.pettingMemory.begs++;pet.pettingMemory.lastBegAt=now;
    recordMoment('social_pet_offer',`${pet.name}はちらっとこちらを見たあと、そばへ来て体を寄せました。`,
@@ -2788,16 +3201,22 @@ function updateSocialRequest(now){
  if(onboardingActive||placingType||walkSession){cancelSocialRequest('interrupted');return;}
  if(r.stage==='prepare'&&now>=r.until){
    r.stage='approach';
-   if(r.kind==='play'){
+   if(r.kind==='gift'){
+     if(souvenirCount(r.itemId)<1){cancelSocialRequest('item_lost');return;}
+     socialRequestApproach(now,pet.x>160?253:240);
+   }else if(r.kind==='play'){
      const ball=findRoomItem('ball');if(!ball){cancelSocialRequest('item_removed');return;}
      socialRequestApproach(now,ball.x+(pet.x>ball.x?24:-24));
    }else if(r.kind==='walk')socialRequestApproach(now,pet.roomTheme==='japanese'?78:pet.roomTheme==='cyber'?225:86);
    else socialRequestApproach(now,pet.x<160?150:170);
-   $('roomCaption').textContent=r.kind==='walk'?`${pet.name}は窓辺へ歩いていきます。`:
+   $('roomCaption').textContent=r.kind==='gift'?`${pet.name}は大切そうにしまっていたものへ向かっています。`:r.kind==='walk'?`${pet.name}は窓辺へ歩いていきます。`:
      r.kind==='play'?`${pet.name}は毛糸玉の方へ向かっています。`:`${pet.name}はゆっくりこちらへ近づいてきています。`;
  }else if(r.stage==='approach'&&(Math.abs(pet.x-pet.targetX)<2.6||now>=r.until)){
    pet.x=pet.targetX;
-   if(r.kind==='play'){
+   if(r.kind==='gift'){
+     r.stage='bring';socialRequestApproach(now,pet.x<160?146:174);
+     $('roomCaption').textContent=`${pet.name}は${SOUVENIR_CATALOG[r.itemId]?.name||'宝物'}を持って、こちらへ戻ってきます。`;
+   }else if(r.kind==='play'){
      r.stage='bring';socialRequestApproach(now,pet.x<160?146:174);
      memoryInvitation={stage:'bring'};
      $('roomCaption').textContent=`${pet.name}は毛糸玉を運んで、こちらに戻ってきます。`;
@@ -2826,6 +3245,9 @@ function finishSocialRequest(now){
  r.stage='finish';r.until=now+2300;
  if(r.kind==='company'){
    $('roomCaption').textContent=`${pet.name}は満足したように、ゆっくりいつもの場所へ戻ろうとしています。`;
+ }else if(r.kind==='gift'){
+   $('roomCaption').textContent=`${pet.name}は宝物をそっと持ち帰り、また自分の時間に戻りました。`;
+   pet.socialMemory.ignored++;
  }else{
    pet.socialMemory.ignored++;
    $('roomCaption').textContent=`${pet.name}は少し待ったあと、また自分の時間を過ごし始めました。`;
@@ -2839,6 +3261,105 @@ function cancelSocialRequest(reason='interrupted'){
  socialRequest=null;memoryInvitation=null;
  nextSocialRequestCheckAt=Math.max(nextSocialRequestCheckAt,Date.now()+35000);
  renderInvitationButton();renderPettingHint();renderSocialRequest();
+}
+// プレゼントの受け取りだけ、所持数を減らす。見守る・無視する・再起動では消費しない。
+function acceptGift(now=Date.now()){
+ const r=socialRequest;
+ if(!r||r.kind!=='gift'||r.stage!=='wait'||!canInteract())return false;
+ const id=r.itemId,item=SOUVENIR_CATALOG[id];
+ if(!item||souvenirCount(id)<1||giftsReceivedToday(now)>=GIFT_DAY_LIMIT)return false;
+ const memory=pet.giftMemory;
+ memory.inventory[id]--;
+ memory.givenCounts[id]=clamp((memory.givenCounts[id]||0)+1,0,99999);
+ memory.totalGiven=clamp(memory.totalGiven+1,0,99999);
+ memory.lastGivenAt=now;
+ memory.tastes[id]=clamp((memory.tastes[id]||0)+1,-30,30);
+ memory.affection[id]=clamp(treasureAffection(id)+8+(memory.displayed.includes(id)?2:0),0,TREASURE_AFFECTION_MAX);
+ memory.repeatStreak=memory.lastGiftId===id?memory.repeatStreak+1:1;
+ memory.lastGiftId=id;
+ memory.longestStreak[id]=Math.max(memory.longestStreak[id]||0,memory.repeatStreak);
+ const shy=pet.caution>67||pet.emotions.wariness>52;
+ const energetic=pet.activity>65&&pet.emotions.safety>50;
+ const response=shy?'少し照れたように後ろへ下がりました。':energetic?'嬉しそうに、ぽよんと小さく跳ねました。':'安心したように、ふんわり体を揺らしました。';
+ memory.given.push({id,at:now,location:item.location,response});
+ memory.given=memory.given.slice(-GIFT_RECORD_LIMIT);
+ pet.socialMemory.answered.gift=clamp((pet.socialMemory.answered.gift||0)+1,0,99999);
+ socialRequest=null;memoryInvitation=null;
+ nextSocialRequestCheckAt=Math.max(nextSocialRequestCheckAt,now+45000);
+ adjustEmotion({connection:3,safety:2,wariness:-1});
+ if(shy)observePersonality('cautiousExplorer',`${pet.name}は贈りものを渡すと、少し照れて後ろに下がりました。`,now);
+ else if(energetic)observePersonality('affectionate',`${pet.name}は贈りものを受け取ってもらい、嬉しそうに跳ねました。`,now);
+ const before=memory.givenCounts[id]-1;
+ if(memory.totalGiven===1){
+  recordMoment('gift_first',`${pet.name}が${WALK_DESTINATIONS[item.location].label}で拾った${item.name}を持ってきてくれました。${response}`,
+   'プレイヤーが実際に受け取った、初めての贈りものです。',{title:'初めてプレゼントをくれた日'});
+  pet.momentJournal.seen.push(`gift_first_${id}`);
+ }else if(before===0){
+  recordMoment(`gift_first_${id}`,`${pet.name}が${item.name}を持ってきてくれました。${response}`,
+   '初めてこの種類を受け取った日です。',{title:`初めて${item.name}をくれた日`});
+ }else if(memory.givenCounts[id]===3){
+  recordMoment(`gift_repeat_${id}`,`${pet.name}が、また${item.name}を持ってきてくれました。どうやら特別な宝物なのかもしれません。`,
+   '何度も同じものを選んだことを、実際の贈りものから記録しました。',{title:`${item.name}を何度もくれた日`});
+ }
+ if(memory.repeatStreak>=3 && memory.givenCounts[id]>=5){
+   recordMoment(`gift_longhabit_${id}`,`${pet.name}は、続けて${memory.repeatStreak}回も${item.name}を選びました。`,
+    'ほかの種類もある中で選び続けた、実際の贈りものの記録です。',{title:`いつもの贈りものは${item.name}`});
+ }
+ performReaction({action:energetic?'happy':shy?'walk':'idle',kind:energetic?'hop':shy?'recoil':'sway',
+  duration:3500,mood:energetic?'happy':'calm',gesture:'プレゼントを渡して、こちらの様子を見ている',
+  caption:`${pet.name}から${item.name}を受け取りました。${response}`,thought:shy?'…': '♪'});
+ renderGiftCollection();renderWalkCollection();renderSocialRequest();save();
+ return true;
+}
+function watchGift(){
+ const r=socialRequest,now=Date.now();
+ if(!r||r.kind!=='gift'||r.stage!=='wait')return false;
+ const item=SOUVENIR_CATALOG[r.itemId];
+ $('roomCaption').textContent=`${pet.name}は${item?.name||'宝物'}をそばに置いたまま、しばらくこちらを見つめています。`;
+ showThought('…？');
+ r.lastWaitCue=now;
+ // 見守る選択ではタイマーを伸ばさず、宝物も消費しない。
+ return true;
+}
+function renderGiftCollection(){
+ const summary=$('giftCollectionSummary'),list=$('giftCollectionList');
+ if(!summary||!list||!pet.giftMemory)return;
+ const m=pet.giftMemory;
+ summary.textContent=`これまでにもらった贈りもの ${m.totalGiven}個 ・ まだ部屋にある宝物 ${unwrappedGiftCount()}個`;
+ const habit=$('giftHabitHint');if(habit)habit.textContent=treasureHabitText();
+ const shelf=$('giftDecorCount');if(shelf)shelf.textContent=`飾り棚 ${m.displayed.length}/${TREASURE_DISPLAY_MAX}`;
+ updateTreasureShelf();
+ list.replaceChildren();
+ const received=treasuredGiftIds().sort((a,b)=>{
+   const date=id=>Math.max(0,...m.given.filter(g=>g.id===id).map(g=>g.at));
+   return date(b)-date(a);
+ });
+ if(!received.length){
+  const p=document.createElement('p');p.className='gift-collection-empty';
+  p.textContent='まだプレゼントはありません。お散歩で拾った宝物を、いつかそっと渡してくれるかもしれません。';
+  list.appendChild(p);return;
+ }
+ for(const id of received){
+  const item=SOUVENIR_CATALOG[id];if(!item)continue;
+  const latest=[...m.given].reverse().find(g=>g.id===id);
+  const card=document.createElement('article');card.className='gift-collection-entry gift-treasure-card';
+  const icon=document.createElement('img');icon.src=`assets/souvenirs/${item.sprite}`;icon.alt='';icon.loading='lazy';
+  const copy=document.createElement('div');copy.className='gift-treasure-copy';
+  const title=document.createElement('strong');title.textContent=`${item.name} × ${m.givenCounts[id]||0}`;
+  const time=document.createElement('time');
+  if(latest){time.dateTime=new Date(latest.at).toISOString();time.textContent=`最後にもらった日：${formatJournalDate(latest.at)}`;}
+  else time.textContent='以前からもらっている宝物';
+  const attachment=document.createElement('span');attachment.className='gift-affection';attachment.textContent=treasureAffectionText(id);
+  const buttons=document.createElement('div');buttons.className='gift-treasure-actions';
+  const decorate=document.createElement('button');decorate.type='button';
+  const placed=m.displayed.includes(id);
+  decorate.className=`gift-decor-button${placed?' is-displayed':''}`;
+  decorate.textContent=placed?'飾り棚からしまう':'おへやに飾る';
+  decorate.dataset.giftDecor=id;
+  decorate.setAttribute('aria-pressed',String(placed));
+  buttons.appendChild(decorate);copy.append(title,time,attachment,buttons);
+  card.append(icon,copy);list.appendChild(card);
+ }
 }
 function completeSocialRequest(kind,now=Date.now(),options={}){
  if(socialRequest?.kind!==kind||socialRequest.stage!=='wait')return false;
@@ -2859,6 +3380,7 @@ function completeSocialRequest(kind,now=Date.now(),options={}){
 }
 function answerSocialRequest(kind){
  if(socialRequest?.kind!==kind||socialRequest.stage!=='wait'||!canInteract())return false;
+ if(kind==='gift')return acceptGift();
  if(kind==='play'){
    completeSocialRequest('play');
    pet.bondMemory.invitationAccepted=Math.min(9999,pet.bondMemory.invitationAccepted+1);
@@ -2884,7 +3406,8 @@ function renderSocialRequest(){
  $('socialRequestTitle').textContent=SOCIAL_LABELS[r.kind];
  $('socialRequestDescription').textContent=socialRequestCaption(r.kind);
  const answer=$('socialRequestAnswer');answer.hidden=r.kind==='company';
- answer.textContent={play:'毛糸玉で一緒に遊ぶ',pet:'そっとなでてあげる',walk:'お散歩先を選ぶ'}[r.kind]||'';
+ answer.textContent={play:'毛糸玉で一緒に遊ぶ',pet:'そっとなでてあげる',walk:'お散歩先を選ぶ',gift:'贈りものを受け取る'}[r.kind]||'';
+ const watch=$('socialGiftObserve');if(watch)watch.hidden=r.kind!=='gift';
  $('socialWalkChoices').hidden=!(r.kind==='walk'&&r.walkChooser);
 }
 // —— v9: 一緒に遊んだ記憶から生まれる、自発的なお誘い ——
@@ -2974,81 +3497,154 @@ function answerYarnInvitation(){
   renderInvitationButton();save();
   return true;
 }
+// v36: ひと続きの暮らしにするための行動スケジューラ。
+// 行動の履歴は小さく保持し、性格・天気・時刻・直前の出来事で選択肢を変える。
+let nextHungerSearchAt = 0;
+function rememberDailyAction(kind,now){
+  const flow=pet.dailyFlow;
+  flow.recent.push({kind,at:now});
+  flow.recent=flow.recent.slice(-7);
+}
+function recentDailyPenalty(kind,now){
+  const recent=pet.dailyFlow.recent.filter(x=>now-x.at<240000);
+  let weight=1;
+  // 直前と同じ種類は非常に起こりにくくし、直近の繰り返しも減点する。
+  if(recent.length && recent[recent.length-1].kind===kind)weight*=0.09;
+  for(const entry of recent.slice(-4))if(entry.kind===kind)weight*=0.68;
+  return Math.max(0.025,weight);
+}
 function chooseAutonomousAction(now) {
   if(walkSession||gestureState||gestureSequence)return;
-  if (socialRequest || now < pet.actionUntil || now < pet.nextDecision) return;
-  // 目的地へ移動している途中は、他の行動を選んで中断しない。
-  if (socialRequest || memoryInvitation || socialVisit || roomSpecialVisit || pettingBeg || (objectVisit && objectVisit.stage==='approach') || (placeVisit && placeVisit.stage==='approach')) return;
-  // 同じ種族でも朝型・昼型・夜型があり、活動・休息の選びやすさに少し差がある。
+  if(socialRequest||now<pet.actionUntil||now<pet.nextDecision)return;
+  if(memoryInvitation||socialVisit||roomSpecialVisit||pettingBeg||
+    (objectVisit&&objectVisit.stage==='approach')||(placeVisit&&placeVisit.stage==='approach'))return;
   const hour=new Date(now).getHours();
-  const activeHours=pet.lifeRhythm==='朝型' ? hour>=5&&hour<13 :
-    pet.lifeRhythm==='夜型' ? hour>=19||hour<5 : hour>=9&&hour<20;
-  if (pet.tired > (activeHours?82:72)) {
-    if(pet.quirk==='寝る前にくるくる回る' && maybeBeginSecretHabit(now))return;
-    if(!beginRestAtFavorite(now)) {
-      startAction('sleep', 14000, 'calm');
-      $('roomCaption').textContent = `${pet.name}は体を丸めて、ゆっくり目を閉じました。`;
+  const morning=hour>=5&&hour<11;
+  const activeHours=pet.lifeRhythm==='朝型'?hour>=5&&hour<13:
+    pet.lifeRhythm==='夜型'?hour>=19||hour<5:hour>=9&&hour<20;
+  const world=weatherForTime(now),flow=pet.dailyFlow;
+  const highFatigue=pet.tired>(activeHours?82:72);
+  if(highFatigue){
+    if(pet.quirk==='寝る前にくるくる回る'&&maybeBeginSecretHabit(now)){
+      rememberDailyAction('secret',now);return;
     }
+    if(!beginRestAtFavorite(now)){
+      startAction('sleep',14000,'calm');
+      $('roomCaption').textContent=`${pet.name}は体を丸めて、ゆっくり目を閉じました。`;
+    }
+    rememberDailyAction('rest',now);flow.postPlayUntil=0;
     return;
   }
-  if (pet.hunger > 83) {
-    startAction('sniff', 3600, 'curious');
-    $('roomCaption').textContent = `${pet.name}は食べ物のありそうな場所を探しています。`;
-    return;
+  // 遊びの後は興奮をほどき、お気に入りの場所で休む。疲れていなくても自然につながる。
+  if(flow.postPlayUntil>now && pet.action!=='play'){
+    flow.postPlayUntil=0;
+    const quietKeys=['cushion','blanket','plush','window','corner'].filter(placeAvailable);
+    const preferred=pet.placeMemory?.habitualSpot;
+    const key=quietKeys.includes(preferred)?preferred:quietKeys.length?
+      weightedChoice(quietKeys.map(id=>({id,weight:Math.max(1,placePreference(id,now)+(id==='cushion'?22:0))}))):null;
+    if(key){
+      const ok=ROOM_ITEM_TYPES[key]?beginObjectVisit(findRoomItem(key),now,'sleep'):beginFreePlaceVisit(key,now,'sleep');
+      if(ok!==false){rememberDailyAction('rest',now);return;}
+    }
   }
-  // 季節と部屋の違いを見つける、自発的な特別行動。
-  const world=weatherForTime(now);
-  const weatherTaste=pet.worldMemory.weatherTastes[world.weather];
-  const roomTaste=pet.worldMemory.roomTastes[pet.roomTheme];
-  const specialChance=clamp(0.27+(weatherTaste+roomTaste)*0.007-(world.weather==='rain'&&pet.caution>70?0.08:0),0.07,0.49);
-  if(Math.random()<specialChance && beginRoomSpecial(now)) return;
-  // 一緒に遊んだ思い出があると、自分から毛糸玉を持ってくることがある。
-  if(maybeBeginSocialRequest(now)) return;
-  // 自発的なおめかしと、個体に固有の珍しい行動。連続発生させない。
-  if(maybeChooseOwnHeadwear(now))return;
-  if(maybeBeginSecretHabit(now))return;
-  // 自分の意思で人のほうへ来ることも。呼び声への反応とは区別します。
-  // v21: 自発的な接近は共通のお誘い状態で実行します。
-  // v17: 生活のすき間で新しい仕草や連続行動を選ぶ。
-  if(maybeChooseLittleGesture(now))return;
-  // 家具だけでなく、窓辺・部屋の隅も日常の居場所として自分で選びます。
-  // 好みが定着すると、同じ場所へ戻る傾向が少しずつ強まります。
-  if(Math.random()<(activeHours?0.25:0.37) && startAutonomousFreePlace(now)) return;
-  if (pet.roomItems.length && Math.random() < (activeHours?0.66:0.46) && startAutonomousItemAction(now)) return;
-  const e = pet.emotions;
-  const trend=tendencyScores(),shift=momentaryDisposition(now);
-  const selected = weightedChoice([
-    {id:'walk', weight: 18 + pet.activity * 0.27 + e.interest * 0.12 + trend.mischievous*.11+shift*9},
-    {id:'look', weight: 8 + pet.curiosity * 0.23 + e.interest * 0.2 + trend.cautiousExplorer*.13},
-    {id:'idle', weight: 18 + (100-pet.activity)*0.15 + e.safety*0.06 + trend.relaxed*.18-shift*8},
-    {id:'collect', weight: 8 + pet.attachment * 0.17 + e.interest*0.08 + trend.collector*.23 + trend.tidy*.08},
-    {id:'sniff', weight: 4 + pet.hunger*0.12}
-  ]);
-  if (selected === 'walk') {
-    const target = clamp(pet.x + (Math.random() < 0.5 ? -1 : 1) * (36 + Math.random()*44), 45, 275);
-    observeActivityPreference('active',now);
-    startAction('walk', 2600 + Math.random()*1900, 'curious', target);
-    $('roomCaption').textContent = `${pet.name}は部屋の中をてくてく歩いています。`;
-  } else if (selected === 'look') {
-    observeActivityPreference('quiet',now);
-    startAction('look', (2600 + Math.random()*1200)*(0.83+pet.temperament.patience/230), 'curious');
-    $('roomCaption').textContent = `${pet.name}は立ち止まり、何かをじっと見つめています。`;
-    if (pet.curiosity > 60) discover('curiosity', `${pet.name}は気になるものを見つけると、じっと観察するようです。`);
-  } else if (selected === 'collect') {
-    observeActivityPreference('active',now);
-    startAction('collect', 3300, 'happy');
-    $('roomCaption').textContent = `${pet.name}は床の小さなものをつついています。`;
-    discover('collector', `${pet.name}には小さなものを集める習性があるようです。`);
-    if(trend.collector>=49)observePersonality('collector',`${pet.name}は床の小さなものに気づき、自分から集めようとしました。`,now);
-  } else if (selected === 'sniff') {
-    startAction('sniff', 2700, 'curious');
-    $('roomCaption').textContent = `${pet.name}は何かの匂いを確かめているみたい。`;
-  } else {
-    observeActivityPreference('quiet',now);
-    startAction('idle', (2800 + Math.random()*1700)*(0.8+pet.temperament.patience/180), 'calm');
-    $('roomCaption').textContent = `${pet.name}はその場で、ぼんやりしています。`;
-    if(trend.relaxed>=52)observePersonality('relaxed',`${pet.name}は慌てずに、のんびりと過ごしていました。`,now);
+  // 朝の日差しを好む子ほど、自分で窓辺を確かめにいく。
+  if(morning&&placeAvailable('window')&&now-flow.lastWindowAt>12*60000&&
+    recentDailyPenalty('place',now)>0.10 &&
+    Math.random()<(pet.lifeRhythm==='朝型'?.52:pet.lifeRhythm==='夜型'?.13:.32)*(.75+pet.curiosity/200)){
+    if(beginFreePlaceVisit('window',now)){
+      flow.lastWindowAt=now;rememberDailyAction('place',now);
+      $('roomCaption').textContent=`${pet.name}は朝の光が気になって、窓辺へ向かっています。`;
+      return;
+    }
   }
+  // 雨の日は普段から慣れている家具を選んで静かに過ごすことがある。
+  if(world.weather==='rain'&&now-flow.lastRainAt>10*60000&&pet.roomItems.length&&
+    recentDailyPenalty('item',now)>0.10&&Math.random()<(.25+pet.caution*.002)){
+    const calmItems=pet.roomItems.filter(item=>itemAttraction(item,now)>0);
+    if(calmItems.length){
+      const id=weightedChoice(calmItems.map(item=>({id:item.id,weight:Math.max(1,itemAttraction(item,now)+
+        (pet.objectMemory[item.id]?.visits||0)*1.2+(['cushion','blanket','plush'].includes(item.id)?25:0))})));
+      const item=calmItems.find(entry=>entry.id===id);
+      if(item){beginObjectVisit(item,now,'rest');flow.lastRainAt=now;rememberDailyAction('item',now);
+        $('roomCaption').textContent=`${pet.name}は雨の音を聞きながら、なじみのある家具へ向かっています。`;
+        return;}
+    }
+  }
+  const e=pet.emotions,trend=tendencyScores(),shift=momentaryDisposition(now);
+  const weatherTaste=pet.worldMemory.weatherTastes[world.weather]||0;
+  const roomTaste=pet.worldMemory.roomTastes[pet.roomTheme]||0;
+  // 優先順位の固定を廃止。同種の連続は履歴で抑制する。
+  const choices=[
+    {id:'special',weight:14+(weatherTaste+roomTaste)*.3+(morning?4:0)},
+    {id:'social',weight:11+pet.sociability*.13+e.connection*.09},
+    {id:'treasure',weight:7+pet.attachment*.13},
+    {id:'fashion',weight:5+trend.particular*.06},
+    {id:'secret',weight:5+pet.curiosity*.06},
+    {id:'gesture',weight:13+pet.sociability*.06},
+    {id:'place',weight:(activeHours?18:25)+(world.weather==='rain'?12:0)+
+      (pet.lifeRhythm==='朝型'&&morning?9:0)},
+    {id:'item',weight:(activeHours?30:21)+pet.attachment*.08+(world.weather==='rain'?18:0)},
+    {id:'walk',weight:18+pet.activity*.27+e.interest*.12+trend.mischievous*.11+shift*9},
+    {id:'look',weight:8+pet.curiosity*.23+e.interest*.2+trend.cautiousExplorer*.13},
+    {id:'idle',weight:18+(100-pet.activity)*.15+e.safety*.06+trend.relaxed*.18-shift*8},
+    {id:'collect',weight:8+pet.attachment*.17+e.interest*.08+trend.collector*.23+trend.tidy*.08},
+    {id:'sniff',weight:4+pet.hunger*.12}
+  ];
+  if(pet.hunger>83 && now>=nextHungerSearchAt)choices.push({id:'hunger',weight:13});
+  // 同一選択肢が失敗した場合も別の選択肢へフォールバックする。
+  for(let tries=0;tries<choices.length;tries++){
+    const choice=weightedChoice(choices.map(c=>({id:c.id,weight:Math.max(0,c.weight)*recentDailyPenalty(c.id,now)})));
+    const at=choices.findIndex(c=>c.id===choice);
+    if(at<0)break;
+    choices.splice(at,1);
+    let done=false;
+    if(choice==='special')done=beginRoomSpecial(now);
+    else if(choice==='social')done=maybeBeginSocialRequest(now)||beginAutonomousSocialVisit(now);
+    else if(choice==='treasure')done=maybeAdmireTreasure(now);
+    else if(choice==='fashion')done=maybeChooseOwnHeadwear(now);
+    else if(choice==='secret')done=maybeBeginSecretHabit(now);
+    else if(choice==='gesture')done=maybeChooseLittleGesture(now);
+    else if(choice==='place')done=startAutonomousFreePlace(now);
+    else if(choice==='item')done=startAutonomousItemAction(now);
+    else if(choice==='hunger'){
+      nextHungerSearchAt=now+HUNGER_SEARCH_COOLDOWN_MS;
+      startAction('sniff',3600,'curious');
+      $('roomCaption').textContent=`${pet.name}は食べ物のありそうな場所を探しています。`;
+      done=true;
+    }else if(choice==='walk'){
+      const target=clamp(pet.x+(Math.random()<.5?-1:1)*(36+Math.random()*44),45,275);
+      observeActivityPreference('active',now);
+      startAction('walk',2600+Math.random()*1900,'curious',target);
+      $('roomCaption').textContent=`${pet.name}は部屋の中をてくてく歩いています。`;
+      done=true;
+    }else if(choice==='look'){
+      observeActivityPreference('quiet',now);
+      startAction('look',(2600+Math.random()*1200)*(.83+pet.temperament.patience/230),'curious');
+      $('roomCaption').textContent=`${pet.name}は立ち止まり、何かをじっと見つめています。`;
+      if(pet.curiosity>60)discover('curiosity',`${pet.name}は気になるものを見つけると、じっと観察するようです。`);
+      done=true;
+    }else if(choice==='collect'){
+      observeActivityPreference('active',now);
+      startAction('collect',3300,'happy');
+      $('roomCaption').textContent=`${pet.name}は床の小さなものをつついています。`;
+      discover('collector',`${pet.name}には小さなものを集める習性があるようです。`);
+      if(trend.collector>=49)observePersonality('collector',`${pet.name}は床の小さなものに気づき、自分から集めようとしました。`,now);
+      done=true;
+    }else if(choice==='sniff'){
+      startAction('sniff',2700,'curious');
+      $('roomCaption').textContent=`${pet.name}は何かの匂いを確かめているみたい。`;
+      done=true;
+    }else if(choice==='idle'){
+      observeActivityPreference('quiet',now);
+      startAction('idle',(2800+Math.random()*1700)*(.8+pet.temperament.patience/180),'calm');
+      $('roomCaption').textContent=`${pet.name}はその場で、ぼんやりしています。`;
+      if(trend.relaxed>=52)observePersonality('relaxed',`${pet.name}は慌てずに、のんびりと過ごしていました。`,now);
+      done=true;
+    }
+    if(done){rememberDailyAction(choice,now);return;}
+  }
+  // 何も実行できない場合も次の判定まで少し休む。
+  startAction('idle',2500,'calm');rememberDailyAction('idle',now);
 }
 function tick(timestamp) {
   if (!lastFrame) lastFrame = timestamp;
@@ -3060,7 +3656,7 @@ function tick(timestamp) {
   // 実時間の進行（画面を閉じている間の変化は起動時に別途計算）
   if (pet.action === 'sleep') pet.tired = clamp(pet.tired - dt * 1.5);
   else pet.tired = clamp(pet.tired + dt * (0.025 + pet.activity * 0.0004));
-  pet.hunger = clamp(pet.hunger + dt * 0.017);
+  pet.hunger = clamp(pet.hunger + dt * HUNGER_GAIN_PER_HOUR / 3600);
   const e = pet.emotions;
   e.interest = clamp(e.interest + dt * (pet.curiosity * 0.0009 - 0.017));
   e.wariness = clamp(e.wariness - dt * (e.safety > 55 ? 0.032 : 0.014));
@@ -3088,6 +3684,7 @@ function tick(timestamp) {
   }
   moveTowardTarget(dt);
   updateLittleGestures(now);
+  updateAutonomousSocialVisit(now);
   updateObjectVisit(now);
   updateFreePlaceVisit(now);
   // お誘いの移動・待機は updateSocialRequest で一元管理します。
@@ -3111,7 +3708,12 @@ function observe() {
   else if (reaction && Date.now() < reaction.until) description = `${pet.name}は${reaction.gesture}。`;
   else if (roomSpecialVisit && roomSpecialVisit.stage==='approach') description = `${pet.name}はこのおへやならではの場所へ向かっています。`;
   else if (roomSpecialVisit && roomSpecialVisit.stage==='staying') description = `${pet.name}は${roomSpecialVisit.spot.label}ことに夢中です。`;
-  else if (socialVisit && socialVisit.stage==='approach') description = `${pet.name}は自分からこちらへ歩いてきています。`;
+  else if (socialVisit && socialVisit.stage==='approach') description = socialVisit.type==='approach'?
+    `${pet.name}は自分から甘えようとこちらへ歩いてきています。`:
+    `${pet.name}は安心できる場所を選んで、こちらのそばへ歩いています。`;
+  else if (socialVisit && socialVisit.stage==='resting') description = socialVisit.type==='approach'?
+    `${pet.name}はそばに寄って、甘えたそうにこちらを見上げています。`:
+    `${pet.name}はそばにいるだけで落ち着くのか、静かにくつろいでいます。`;
   else if (placeVisit && placeVisit.stage==='approach') description = `${pet.name}は${placeLabel(placeVisit.key)}へ、ゆっくり向かっています。`;
   else if (placeVisit && placeVisit.stage==='staying') description = `${pet.name}は${placeLabel(placeVisit.key)}で、しばらく落ち着いて過ごしています。`;
   else if (objectVisit && objectVisit.stage==='approach') description = `${pet.name}は${ROOM_ITEM_TYPES[objectVisit.id].label}のそばへ、ゆっくり向かっています。`;
@@ -3414,7 +4016,7 @@ for(const [id,info] of Object.entries(WALK_DESTINATIONS)){
 const WALK_SOFT_COLORS={'shell':'#e7c0ac','glass':'#9ccdbd','acorn':'#ae8762','leaf':'#d9ae73','petal':'#e1a9b1','button':'#e1cba1'};
 function drawWalkSouvenirsInRoom(){
  if(!pet.walkMemory?.souvenirs?.length)return;
- const displayed=pet.walkMemory.souvenirs.slice(-3);
+ const displayed=giftItemIds().flatMap(id=>Array.from({length:Math.min(3,souvenirCount(id))},()=>({id}))).slice(-3);
  ctx.save();
  displayed.forEach((item,i)=>{
   const x=262+i*12, y=171+(i%2)*5;
@@ -3425,10 +4027,42 @@ function drawWalkSouvenirsInRoom(){
  });
  ctx.restore();
 }
+function renderSouvenirAlbum(){
+ const grid=$('souvenirAlbumGrid'),count=$('souvenirAlbumCount');
+ if(!grid||!count||!pet.giftMemory)return;
+ const found=pet.giftMemory.found||{};
+ const discovered=giftItemIds().filter(id=>Number(found[id])>0).length;
+ count.textContent=`${discovered} / ${giftItemIds().length}種類を発見`;
+ grid.replaceChildren();
+ for(const locationId of Object.keys(WALK_DESTINATIONS)){
+   const heading=document.createElement('h3');heading.className='souvenir-album-location';
+   heading.textContent=WALK_DESTINATIONS[locationId].label;
+   grid.appendChild(heading);
+   for(const [id,item] of Object.entries(SOUVENIR_CATALOG)){
+     if(item.location!==locationId)continue;
+     const seen=(Number(found[id])||0)>0;
+     const card=document.createElement('div');card.className=`souvenir-album-card${seen?' is-discovered':' is-unknown'}`;
+     const img=document.createElement('img');img.src=`assets/souvenirs/${item.sprite}`;img.alt='';img.loading='lazy';
+     const copy=document.createElement('div');
+     const name=document.createElement('strong');name.textContent=seen?item.name:'まだ見つけていない宝物';
+     const detail=document.createElement('small');detail.textContent=seen?
+       `${SOUVENIR_RARITY_LABELS[item.rarity]||'宝物'}・持ち物 ${souvenirCount(id)}個`:
+       'どこかに隠れているみたい…';
+     copy.append(name,detail);card.append(img,copy);grid.appendChild(card);
+   }
+ }
+}
+
 function renderWalkCollection(){
  const el=$('walkCollection');if(!el)return;
  const gifts=pet.walkMemory?.souvenirs||[];
- el.textContent=gifts.length?`持ち帰った小さな宝物：${gifts.slice(-5).map(i=>i.name).join('、')}（ぜんぶで${gifts.length}個）`:
+ const allFound=giftItemIds().reduce((n,id)=>n+(pet.giftMemory?.found?.[id]||0),0);
+ const stocked=giftItemIds().filter(id=>souvenirCount(id)>0).map(id=>`${SOUVENIR_CATALOG[id].name}×${souvenirCount(id)}`);
+ renderSouvenirAlbum();
+ const shown=stocked.slice(0,4).join('、')+(stocked.length>4?`、ほか${stocked.length-4}種類`:'');
+ el.textContent=stocked.length?`部屋にある宝物：${shown}（合計${unwrappedGiftCount()}個）。見つけた数：${allFound}個`:
+  gifts.length?`これまでお散歩で見つけた宝物は${allFound}個。今は全部、贈りものになりました。`:
+  
   'おみやげはまだありません。散歩の途中で、この子が拾ってくるかもしれません。';
 }
 function walkNarrate(text){if(walkSession){walkSession.message=text;$('walkNarration').textContent=text;}}
@@ -3450,13 +4084,14 @@ function openWalk(locationId){
  if(socialRequest?.kind==='walk'&&socialRequest.stage==='wait')completeSocialRequest('walk',Date.now(),{locationId});
  else if(socialRequest)cancelSocialRequest('interrupted');
  if(onboardingActive||placingType||!WALK_DESTINATIONS[locationId])return;
+ if(socialVisit){socialVisit=null;pet.action='idle';pet.actionUntil=0;pet.targetX=pet.x;}
  if(walkSession)endWalk(false);
  pet.walkMemory=normalizeWalkMemory(pet.walkMemory);
  const place=WALK_DESTINATIONS[locationId],memory=pet.walkMemory.locations[locationId];
  memory.visits++;pet.walkMemory.totalWalks++;
  walkSession={location:locationId,x:160,targetX:160,face:1,action:'idle',stage:'idle',target:null,
   invited:false,nextDecision:Date.now()+2400,stageUntil:0,lastReact:0,lastInput:0,souvenir:null,
-  petReaction:null,gesture:null,nearPlayer:false,message:'',lastExplore:0,exploreBehavior:null,exploreStart:0};
+  petReaction:null,gesture:null,nearPlayer:false,bondMoment:null,message:'',lastExplore:0,exploreBehavior:null,exploreStart:0};
  $('walkScene').style.backgroundImage=`url("assets/walks/${place.image}")`;
  $('walkTitle').textContent=place.label;
  const weather=weatherForTime();
@@ -3496,6 +4131,7 @@ function walkBias(target){
 }
 function inviteWalkTarget(id){
  if(walkSession?.gesture){walkSession.gesture=null;walkSession.stage='idle';}
+ if(walkSession?.stage==='bond'){walkSession.bondMoment=null;walkSession.stage='idle';}
  if(!walkSession||!WALK_DESTINATIONS[walkSession.location].targets.some(t=>t.id===id))return;
  const w=walkSession,target=WALK_DESTINATIONS[w.location].targets.find(t=>t.id===id),now=Date.now();
  if(w.stage==='approach'||w.stage==='explore')return;
@@ -3555,7 +4191,7 @@ function finishWalkExploration(now){
  memory.affinity=clamp(memory.affinity+(match?1.35:.25)-(pet.emotions.wariness>78?.8:0),-35,35);
  if(!w.invited&&tendencyScores().cautiousExplorer>=52&&pet.caution>=55)
    observePersonality('cautiousExplorer',`${pet.name}はお散歩先で少しずつ${target.label}へ近づき、確かめました。`,now);
- if(!w.invited&&target.souvenir&&tendencyScores().collector>=48)
+ if(!w.invited&&souvenirCandidates(w.location,target.id).length&&tendencyScores().collector>=48)
    observePersonality('collector',`${pet.name}は${target.label}を自分から見つけて、じっと調べました。`,now);
  const place=WALK_DESTINATIONS[w.location].label;
  if(before===0){
@@ -3571,16 +4207,31 @@ function finishWalkExploration(now){
  }else{
   walkNarrate(`${pet.name}は${target.label}のそばで、${behavior.caption}`);
  }
- // 持ち帰るかどうかは、この子の気質と気分。1回につき1個だけ。
- if(!w.souvenir&&target.souvenir && Math.random()<clamp(.20+(match?.22:0)+(pet.attachment-50)/260+targetMemory.affinity/180+(behavior.motive==='collector'?.13:0),.09,.68)){
-  const gift={id:target.itemId,name:target.souvenir,location:w.location,at:now};
-  w.souvenir=gift;pet.walkMemory.souvenirs.push(gift);
-  pet.walkMemory.souvenirs=pet.walkMemory.souvenirs.slice(-30);
-  walkNarrate(`${pet.name}は${target.souvenir}を見つけ、そっと持ち上げました。おうちに持って帰るつもりみたい！`);
-  recordMoment(`walk_${w.location}_souvenir`,`${pet.name}は${place}で${target.souvenir}を拾い、おみやげにしました。`,
-   'この散歩で拾ったものです。おうちに小さな宝物として残ります。',
-   {title:`${place}から初めてのおみやげ`});
-  renderWalkCollection();
+ // 持ち帰るかどうかは、この子の気質と気分。1回の散歩で最大1個。
+ // 何を拾うかはv29のお土産カタログから選ぶので、新種を足してもここは変更不要。
+ if(!w.souvenir&&souvenirCandidates(w.location,target.id).length&&
+    Math.random()<clamp(.20+(match?.22:0)+(pet.attachment-50)/260+targetMemory.affinity/180+
+    (behavior.motive==='collector'?.13:0),.09,.68)){
+  const picked=chooseWalkSouvenir(w.location,target,now);
+  if(picked){
+   const firstTime=(pet.giftMemory.found[picked.id]||0)===0;
+   const gift={id:picked.id,name:picked.name,location:w.location,at:now};
+   w.souvenir=gift;
+   pet.walkMemory.souvenirs.push(gift);
+   addSouvenirToInventory(gift);
+   pet.walkMemory.souvenirs=pet.walkMemory.souvenirs.slice(-30);
+   const rareText=picked.rarity===3?'見たことのないほど珍しい':picked.rarity===2?'ちょっと珍しい':'';
+   walkNarrate(`${pet.name}は${rareText}${picked.name}を見つけ、そっと持ち上げました。おうちに持って帰るつもりみたい！`);
+   recordMoment(`walk_${w.location}_souvenir`,`${pet.name}は${place}で${picked.name}を拾い、おみやげにしました。`,
+    'この散歩で拾ったものです。おうちに小さな宝物として残ります。',
+    {title:`${place}から初めてのおみやげ`});
+   if(firstTime && picked.rarity>=2){
+    recordMoment(`walk_v29_first_${picked.id}`,`${pet.name}は${place}で${picked.name}を見つけました。`,
+     `初めて見つけた宝物です。${SOUVENIR_RARITY_LABELS[picked.rarity]}。`,
+     {title:`初めて${picked.name}を見つけた日`});
+   }
+   renderWalkCollection();
+  }
  }
  if(behavior.notable){
   recordMoment(`walk_v20_${w.location}_${target.id}_${behavior.id}`,
@@ -3602,7 +4253,7 @@ function strokeWalkPet(mode='tap'){
  if(walkSession?.gesture){walkSession.gesture=null;walkSession.stage='idle';}
  const w=walkSession;if(!w)return;
  const now=Date.now();if(now-w.lastReact<1100)return;
- w.exploreBehavior=null;w.target=null;
+ w.bondMoment=null;w.exploreBehavior=null;w.target=null;
  w.lastReact=now;
  const m=pet.pettingMemory,e=pet.emotions;
  m.attempts++;m.lastPetAt=now;
@@ -3627,9 +4278,28 @@ function strokeWalkPet(mode='tap'){
  }
  renderPettingHint();save();
 }
+// v33: お散歩先でも、それぞれの子の懐き方が自然に現れる。
+const BOND_WALK_GAP=105*1000;
+function maybeBeginWalkBondMoment(now){
+ const w=walkSession;
+ if(!w||w.stage!=='idle'||w.gesture||w.target||w.petReaction||pet.tired>76||pet.hunger>86)return false;
+ const level=bondClosenessStage();
+ if(level<1||now-pet.bondStyle.lastWalkAt<BOND_WALK_GAP)return false;
+ if(Math.random()>(level===2?.31:.20))return false;
+ const type=pet.bondStyle.type;
+ w.bondMoment={type,level};
+ w.stage='bond';w.action='walk';w.targetX=type==='approach'?160:(w.x<160?188:206);
+ w.nextDecision=now+12000;
+ pet.bondStyle.lastWalkAt=now;
+ walkNarrate(type==='approach'?
+   `${pet.name}は探索の途中で、こちらへとことこ駆け寄ってきました。`:
+   `${pet.name}はちらりとこちらを見てから、安心したように近くの場所を選びました。`);
+ return true;
+}
 function decideWalkAutonomy(now){
  const w=walkSession;if(!w)return;
  // 探索ばかり続かず、眺めたり小さく動いたりする時間を作ります。
+ if(maybeBeginWalkBondMoment(now))return;
  if(Math.random()<.27){const id=selectLittleGesture(now,'walk');if(beginLittleGesture(id,now,'walk'))return;}
  const memory=pet.walkMemory.locations[w.location];
  const waveRisk=w.location==='sea'&&pet.caution>75;
@@ -3642,7 +4312,7 @@ function decideWalkAutonomy(now){
       `${pet.name}は立ち止まって、景色をぼんやり眺めています。`);}
   w.nextDecision=now+6500+Math.random()*4000;return;
  }
- if(Math.random()<clamp((.09+pet.sociability*.002+eSafety()/450-(waveRisk?.04:0))*personalityFactor('affectionate',.7,1.5),.07,.38)){
+ if(Math.random()<clamp((.09+pet.sociability*.002+eSafety()/450-(waveRisk?.04:0))*personalityFactor('affectionate',.7,1.5)*(pet.bondStyle.type==='trust'?.24:1.18),.025,.44)){
   w.action='walk';w.stage='come';w.targetX=174;w.nextDecision=now+6500;
   walkNarrate(`${pet.name}は景色から目を離して、こちらに近づいてきました。`);return;
  }
@@ -3660,7 +4330,7 @@ function updateWalkSession(now,dt,time){
  }
 
  if(w.petReaction?.until<now)w.petReaction=null;
- if(w.stage==='approach'||w.stage==='wander'||w.stage==='come'||(w.action==='walk'&&Math.abs(w.targetX-w.x)>2)){
+ if(w.stage==='approach'||w.stage==='wander'||w.stage==='come'||w.stage==='bond'||(w.action==='walk'&&Math.abs(w.targetX-w.x)>2)){
   const dx=w.targetX-w.x;
   if(Math.abs(dx)>0.5){w.x+=Math.sign(dx)*Math.min(Math.abs(dx),dt*35);w.face=dx>0?1:-1;}
   if(Math.abs(w.targetX-w.x)<3){
@@ -3671,9 +4341,29 @@ function updateWalkSession(now,dt,time){
     w.action=w.exploreBehavior.sprite;
     w.stageUntil=now+w.exploreBehavior.duration;
     walkNarrate(`${pet.name}は${w.target.label}のそばに来ました。${w.exploreBehavior.caption}`);
+   }else if(w.stage==='bond'){
+    const event=w.bondMoment;
+    w.stage='idle';w.target=null;
+    if(event){
+      const active=event.type==='approach';
+      w.action=active?'happy':event.level===2?'sleep':'idle';
+      w.nearPlayer=true;
+      w.petReaction=active?{kind:'cuddle',until:now+3600}:null;
+      w.nextDecision=now+(event.level===2?7200:5400);
+      const description=active?
+        (event.level===2?`${pet.name}は駆け寄ってきて、体をくっつけてから嬉しそうに弾みました。`:
+          `${pet.name}は自分からこちらに近づき、しばらくそばにいました。`):
+        (event.level===2?`${pet.name}はこちらがいるのを確かめて、安心したように近くでうとうとしています。`:
+          `${pet.name}はそばでのんびり立ち止まり、落ち着いた様子で景色を見ています。`);
+      walkNarrate(description);
+      noteBondMoment('walk',description,now);
+      w.bondMoment=null;
+    }
    }else if(w.stage==='come'){
     w.stage='idle';w.action='idle';w.nearPlayer=true;w.nextDecision=now+6500;
-    walkNarrate(`${pet.name}は自分からこちらへやってきて、そばで落ち着いています。なでてあげられます。`);
+    walkNarrate(pet.bondStyle.type==='approach'?
+      `${pet.name}は自分からこちらへやってきて、そばで落ち着いています。なでてあげられます。`:
+      `${pet.name}は近くに戻り、安心したように静かに景色を眺めています。`);
     recordMoment('walk_comfort',`${pet.name}がお散歩中に自分からこちらへ近づいてきました。`,
      'プレイヤーからの誘いではなく、自分の意思で近寄ってきた出来事です。');
    }else if(w.stage==='wander'){w.stage='idle';w.action='idle';}
@@ -4015,6 +4705,15 @@ $('playBtn').addEventListener('click', invitePlay);
 $('petBtn').addEventListener('click', approachPet);
 $('strokePetBtn').addEventListener('click',()=>strokePet('tap'));
 $('socialRequestAnswer').addEventListener('click',()=>{if(socialRequest)answerSocialRequest(socialRequest.kind);});
+$('socialGiftObserve').addEventListener('click',watchGift);
+$('giftCollectionList').addEventListener('click',event=>{
+ const button=event.target.closest('button[data-gift-decor]');
+ if(button)toggleGiftDecoration(button.dataset.giftDecor);
+});
+$('openGiftShelfBtn').addEventListener('click',()=>{
+ openAppTab('notes');setMobileSection('notes','journal',{scroll:false});
+ $('giftCollectionList').scrollIntoView({behavior:'smooth',block:'start'});
+});
 document.querySelectorAll('[data-social-walk]').forEach(button=>button.addEventListener('click',()=>{if(socialRequest?.kind==='walk'&&socialRequest.stage==='wait')openWalk(button.dataset.socialWalk);}));
 $('renameBtn').addEventListener('click', rename);
 $('favoriteStoryBtn').addEventListener('click', openFavoriteStory);
@@ -4025,6 +4724,177 @@ $('nameForm').addEventListener('submit', event => {
     renderUI(); save();
   }
 });
+
+// v34: JSONファイルへのバックアップと、安全な復元。
+// 保存キーは従来と同じ。JSON内のデータは、正規化処理を通してからゲームで使う。
+const BACKUP_FORMAT='little-strange-life-backup';
+const BACKUP_FORMAT_VERSION=1;
+const BACKUP_MAX_BYTES=8*1024*1024;
+let selectedBackup=null;
+let backupSelectionSerial=0;
+
+function backupStatus(elementId,message,isError=false){
+ const el=$(elementId);
+ el.textContent=message;
+ el.classList.toggle('is-error',isError);
+}
+function backupChecksum(value){
+ // 移動中の破損や欠損を検出するための簡易チェック（認証や暗号化ではありません）。
+ const bytes=new TextEncoder().encode(JSON.stringify(value));
+ let hash=2166136261;
+ for(const byte of bytes)hash=Math.imul(hash^byte,16777619);
+ return (hash>>>0).toString(16).padStart(8,'0');
+}
+function validateBackupPet(data){
+ if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('ペットの保存情報が見つかりません。');
+ if(typeof data.name!=='string'||!data.name.trim()||data.name.length>80)throw new Error('ペットの名前が正しくありません。');
+ if(!palettes.includes(data.palette))throw new Error('対応していないペットの色です。');
+ if(!Number.isFinite(data.lastRealTime)||data.lastRealTime<=0)throw new Error('保存日時が正しくありません。');
+ if(!Number.isFinite(data.day)||data.day<1)throw new Error('暮らした日数が正しくありません。');
+ for(const key of ['logs','discoveries','roomItems']){
+  if(data[key]!==undefined&&!Array.isArray(data[key]))throw new Error('記録の形式が正しくありません。');
+ }
+ for(const key of ['walkMemory','giftMemory','bondStyle','wardrobe','placeJournal','worldMemory']){
+  if(data[key]!==undefined&&(!data[key]||typeof data[key]!=='object'||Array.isArray(data[key])))throw new Error('思い出の形式が正しくありません。');
+ }
+ return data;
+}
+function parseBackupFile(text){
+ let obj;
+ try{obj=JSON.parse(text);}catch{throw new Error('JSONファイルを読み取れません。破損していないか確認してください。');}
+ if(!obj||typeof obj!=='object'||Array.isArray(obj))throw new Error('バックアップの形式が正しくありません。');
+ if(Object.prototype.hasOwnProperty.call(obj,'format')){
+  if(obj.format!==BACKUP_FORMAT)throw new Error('別のアプリのバックアップのため読み込めません。');
+  if(obj.formatVersion!==BACKUP_FORMAT_VERSION)throw new Error('このバックアップ形式には対応していません。対応する新しいゲーム版をご利用ください。');
+  const version=Number(String(obj.gameVersion||'').replace(/^v/,''));
+  if(Number.isFinite(version)&&version>34)throw new Error('新しいゲーム版の記録です。新しいゲーム版で復元してください。');
+  const imported=validateBackupPet(obj.pet);
+  if(!obj.integrity||obj.integrity.algorithm!=='fnv1a32'||obj.integrity.value!==backupChecksum(imported)){
+   throw new Error('ファイルの内容が保存時と異なります。破損の可能性があるため復元できません。');
+  }
+  return {pet:imported,exportedAt:obj.exportedAt,originalFormat:'backup'};
+ }
+ // v33以前の localStorage セーブを直接JSONで保存した形式も読み込み可能。
+ const legacy=validateBackupPet(obj);
+ return {pet:legacy,exportedAt:null,originalFormat:'legacy'};
+}
+function backupDateLabel(value){
+ const d=new Date(value);
+ if(!Number.isFinite(d.getTime()))return '不明';
+ return d.toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function backupSafeFileName(name){
+ const cleaned=String(name).normalize('NFKC').replace(/[\\/:*?"<>|\x00-\x1F]/g,'_').replace(/[. ]+$/g,'').trim().slice(0,20);
+ return cleaned||'pet';
+}
+function createBackupDownload(){
+ if(onboardingActive){backupStatus('backupExportStatus','出会いが終わってから書き出せます。',true);return;}
+ try{
+  save(); // 発見ノートと最後に遊んだ時刻も含めて、現在の状態を保存
+  const snapshot=JSON.parse(JSON.stringify(pet));
+  validateBackupPet(snapshot);
+  const exportedAt=new Date().toISOString();
+  const envelope={format:BACKUP_FORMAT,formatVersion:BACKUP_FORMAT_VERSION,gameVersion:'v34',exportedAt,
+   pet:snapshot,integrity:{algorithm:'fnv1a32',value:backupChecksum(snapshot)}};
+  const contents=JSON.stringify(envelope,null,2);
+  const blob=new Blob([contents],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const pad=n=>String(n).padStart(2,'0');
+  const localNow=new Date();
+  const time=`${localNow.getFullYear()}-${pad(localNow.getMonth()+1)}-${pad(localNow.getDate())}_${pad(localNow.getHours())}${pad(localNow.getMinutes())}`;
+  a.download=`little-strange-life_${backupSafeFileName(snapshot.name)}_${time}.json`;
+  a.href=url;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),15000);
+  backupStatus('backupExportStatus',`「${snapshot.name}」の記録を書き出しました。ダウンロード先にファイルが保存されたかご確認ください。`);
+ }catch(err){
+  console.warn('バックアップの書き出しに失敗:',err);
+  backupStatus('backupExportStatus','書き出しに失敗しました。ブラウザのダウンロード設定をご確認ください。',true);
+ }
+}
+function clearBackupPreview(){
+ selectedBackup=null;
+ $('backupPreview').hidden=true;
+}
+async function inspectBackupFile(){
+ const serial=++backupSelectionSerial;
+ clearBackupPreview();
+ const file=$('backupFileInput').files?.[0];
+ $('backupFileName').textContent=file?`選択したファイル：${file.name}`:'まだファイルを選んでいません';
+ if(!file){backupStatus('backupImportStatus','ファイルを選ぶと、内容を確認できます。');return;}
+ if(file.size>BACKUP_MAX_BYTES){backupStatus('backupImportStatus','ファイルが大きすぎます（上限8MB）。',true);return;}
+ if(file.size===0){backupStatus('backupImportStatus','空のファイルは読み込めません。',true);return;}
+ try{
+  const result=parseBackupFile(await file.text());
+  if(serial!==backupSelectionSerial)return;
+  selectedBackup=result;
+  $('backupPreviewName').textContent=result.pet.name;
+  $('backupPreviewDay').textContent=`${result.pet.day}日目`;
+  $('backupPreviewRoom').textContent=roomThemeTitle(result.pet.roomTheme);
+  $('backupPreviewDate').textContent=backupDateLabel(result.exportedAt||result.pet.lastRealTime);
+  $('backupCurrentName').textContent=pet.name;
+  $('backupPreview').hidden=false;
+  backupStatus('backupImportStatus',result.originalFormat==='legacy'?'旧形式のセーブデータを確認できました。':'バックアップの内容とチェック値を確認できました。');
+ }catch(err){
+  if(serial!==backupSelectionSerial)return;
+  console.warn('バックアップの検査に失敗:',err);
+  backupStatus('backupImportStatus',err.message||'ファイルを読み込めませんでした。',true);
+ }
+}
+function replaceSaveWithBackup(data){
+ const oldSave=localStorage.getItem(SAVE_KEY);
+ // 保存が失敗したときに、今のペットの記録を失わないようにする。
+ if(oldSave) localStorage.setItem(PRE_RESTORE_KEY,oldSave);
+ localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+ backupRestoreInProgress=true;
+ window.location.reload();
+}
+function confirmBackupRestore(){
+ if(!selectedBackup)return;
+ const next=selectedBackup.pet;
+ if(!confirm(`今の「${pet.name}」の記録を「${next.name}」の記録に置き換えます。よろしいですか？\n\n※ 今の記録はブラウザ内にも一時退避しますが、先にファイルでバックアップを取ることをおすすめします。`))return;
+ try{
+  replaceSaveWithBackup(next);
+ }catch(err){
+  console.warn('バックアップの復元に失敗:',err);
+  backupStatus('backupImportStatus','復元できませんでした。ブラウザの保存容量や設定をご確認ください。現在のデータはそのままです。',true);
+ }
+}
+function refreshBackupSafety(){
+ const box=$('backupSafety');
+ let prior;
+ try{
+  const raw=localStorage.getItem(PRE_RESTORE_KEY);
+  if(raw)prior=validateBackupPet(JSON.parse(raw));
+ }catch(err){console.warn('復元前データの確認:',err);}
+ box.hidden=!prior;
+ if(prior)$('backupSafetyDescription').textContent=`前回の復元前にいた「${prior.name}」の記録をブラウザ内に一時保存しています。必要なら元に戻せます。`;
+}
+function undoBackupRestore(){
+ let data;
+ try{
+  const raw=localStorage.getItem(PRE_RESTORE_KEY);
+  if(!raw)throw new Error('元のデータがありません。');
+  data=validateBackupPet(JSON.parse(raw));
+ }catch(err){backupStatus('backupImportStatus','戻すための記録が見つかりません。',true);return;}
+ if(!confirm(`今の「${pet.name}」の記録を、復元前の「${data.name}」に戻します。よろしいですか？`))return;
+ try{
+  // 直前の復元と今回の復元を入れ替え。間違えた場合にも戻せるようにする。
+  replaceSaveWithBackup(data);
+ }catch(err){
+  console.warn('復元前の記録に戻せません:',err);
+  backupStatus('backupImportStatus','記録を戻せませんでした。現在の記録は保持されています。',true);
+ }
+}
+$('backupExportBtn').addEventListener('click',createBackupDownload);
+$('backupFileInput').addEventListener('change',inspectBackupFile);
+$('backupRestoreBtn').addEventListener('click',confirmBackupRestore);
+$('backupUndoBtn').addEventListener('click',undoBackupRestore);
+refreshBackupSafety();
+
 $('resetBtn').addEventListener('click', () => {
   if (!confirm('この子との記録を消して、新しい出会いから始めますか？')) return;
   localStorage.removeItem(SAVE_KEY);
@@ -4064,7 +4934,7 @@ function simulateOfflineTraces(hours) {
 function applyElapsedTime(now=Date.now()) {
   const hours=clamp((now-pet.lastRealTime)/3600000,0,48);
   if(hours<=0) return;
-  pet.hunger=clamp(pet.hunger+Math.min(hours*3,30));
+  pet.hunger=clamp(pet.hunger+Math.min(hours*HUNGER_GAIN_PER_HOUR,30));
   pet.tired=clamp(pet.tired+Math.min(hours*2,20));
   pet.emotions.wariness=clamp(pet.emotions.wariness-Math.min(hours*1.5,12));
   pet.emotions.interest=clamp(pet.emotions.interest+Math.min(hours*1.2,10));
@@ -4093,6 +4963,12 @@ document.addEventListener('visibilitychange',()=>{
 });
 if(!onboardingActive) {
   applyElapsedTime();
+  // 旧版の過剰な空腹増加で満腹度が異常に低くなった子を、一度だけ穏やかな状態へ戻す。
+  // 性格・記録・持ち物・親しさなどの既存セーブデータは一切変更しない。
+  if(pet.hungerBalanceFixedV321 !== true){
+    pet.hunger = Math.min(pet.hunger, 65);
+    pet.hungerBalanceFixedV321 = true;
+  }
   $('roomCaption').textContent=`${pet.name}は今日も、この部屋で自分のペースで過ごしています。`;
 }
 renderUI();
