@@ -1,6 +1,6 @@
 :root{--ink:#51483d;--muted:#897e70;--paper:#fbf7ef;--card:#fffdf8;--line:#e8dece;--sage:#82977b;--sage-dark:#60765a;--peach:#f3e1d1}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}.app{max-width:760px;margin:0 auto;padding:18px 16px 28px}.topbar,.pet-heading,.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.topbar{margin-bottom:16px}.eyebrow{margin:0 0 5px;font-size:10px;letter-spacing:.14em;color:var(--muted);font-weight:700}h1{font-size:clamp(22px,5vw,30px);margin:0;letter-spacing:.03em}h2{font-size:18px;margin:0}.day-chip{background:#e9e1d3;border-radius:999px;padding:7px 12px;font-size:12px;color:#6d6254;white-space:nowrap}
-.room-card,.pet-panel,.bottom-panel,.item-panel{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}.room-scene{position:relative;aspect-ratio:8/5;background:#e9d9bf url("assets/room.svg") center/cover no-repeat;overflow:hidden}.room-scene canvas{display:block;width:100%;height:100%;image-rendering:pixelated;position:relative;z-index:1}.weather-label{position:absolute;top:12px;left:14px;background:#fff8e9c9;padding:6px 10px;border-radius:999px;font-size:11px;color:#766750}.thought{position:absolute;right:12%;top:23%;z-index:2;background:#fffdf7;border:1px solid #d8cbb7;border-radius:14px 14px 14px 3px;padding:7px 10px;font-size:12px;opacity:0;transform:translateY(5px);transition:.2s}.thought.show{opacity:1;transform:translateY(0)}.room-caption{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:12px;color:#685846;background:#fff9e7b8;padding:7px 8px;z-index:2}.room-tools{display:flex;gap:10px;padding:12px}.quiet-button,.primary-button{border:1px solid var(--line);border-radius:12px;background:#fffaf1;color:var(--ink);padding:10px 14px;font-size:13px}.room-tools button{flex:1}.quiet-button:active,.action-button:active{transform:translateY(1px)}
+.room-card,.pet-panel,.bottom-panel,.item-panel{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}.room-scene{position:relative;aspect-ratio:8/5;background:#e9d9bf url("assets/rooms/western.png") center/cover no-repeat;overflow:hidden}.room-scene canvas{display:block;width:100%;height:100%;image-rendering:pixelated;position:relative;z-index:1}.weather-label{position:absolute;top:12px;left:14px;background:#fff8e9c9;padding:6px 10px;border-radius:999px;font-size:11px;color:#766750}.thought{position:absolute;right:12%;top:23%;z-index:2;background:#fffdf7;border:1px solid #d8cbb7;border-radius:14px 14px 14px 3px;padding:7px 10px;font-size:12px;opacity:0;transform:translateY(5px);transition:.2s}.thought.show{opacity:1;transform:translateY(0)}.room-caption{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:12px;color:#685846;background:#fff9e7b8;padding:7px 8px;z-index:2}.room-tools{display:flex;gap:10px;padding:12px}.quiet-button,.primary-button{border:1px solid var(--line);border-radius:12px;background:#fffaf1;color:var(--ink);padding:10px 14px;font-size:13px}.room-tools button{flex:1}.quiet-button:active,.action-button:active{transform:translateY(1px)}
 .pet-panel{margin-top:14px;padding:18px}.pet-heading{align-items:flex-start}.pet-heading h2{font-size:24px}.subline{margin:5px 0 0;color:var(--muted);font-size:12px}.icon-button{border:1px solid var(--line);background:#fffaf1;border-radius:12px;width:40px;height:40px;font-size:20px;color:var(--muted)}.signals{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.signal{display:flex;align-items:center;gap:7px;background:#f5efe4;border-radius:999px;padding:8px 11px;font-size:12px;color:#766a5b}.signal-icon{font-size:15px;color:var(--sage-dark)}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.action-button{border:1px solid #e5dac9;border-radius:14px;background:#fffaf2;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--ink);font-size:12px}.action-emoji{font-size:23px}.bottom-panel{margin-top:14px;padding:17px}.section-heading{margin-bottom:10px}.section-heading span{font-size:11px;color:var(--muted);background:#f3ede2;padding:5px 9px;border-radius:999px}#discoveryText{font-size:13px;line-height:1.7;color:#766b5e;margin:0 0 12px}.log{border-top:1px solid var(--line);padding-top:8px;max-height:118px;overflow:auto}.log p{font-size:12px;color:#7e7365;margin:6px 0;line-height:1.5}.reset-link{display:block;margin:15px auto 0;border:0;background:transparent;color:#9a8b79;text-decoration:underline;font-size:11px}footer{text-align:center;font-size:10px;color:#a19584;padding:16px 8px}dialog{border:1px solid var(--line);border-radius:18px;padding:22px;max-width:calc(100% - 32px);width:360px;background:var(--card);color:var(--ink);box-shadow:0 20px 60px #453c2c30}dialog::backdrop{background:#41392e55}dialog h2{margin-bottom:8px}dialog p{font-size:13px;color:var(--muted)}dialog input{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fffaf2;color:var(--ink);margin:8px 0 16px}.dialog-buttons{display:flex;justify-content:flex-end;gap:8px}.primary-button{background:var(--sage);color:white;border-color:var(--sage)}@media(min-width:600px){.app{padding:26px 22px 36px}.room-scene{min-height:0}.room-scene canvas{max-height:none}.pet-panel,.bottom-panel{padding:22px}.actions{gap:12px}.action-button{min-height:86px;font-size:13px}}
 
 /* v4: おもちゃと家具の配置 */
@@ -19,3 +19,130 @@
 .item-footnote{margin:12px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
 @media(min-width:600px){.item-panel{padding:22px}.item-choice{min-height:120px}.item-choice img{width:52px;height:52px}}
 @media(max-width:360px){.item-name{font-size:10px}.item-sub{font-size:9px}.item-choice{padding:5px 2px;min-height:101px}}
+
+/* v5: 部屋に残る小さな変化 */
+.room-history{margin-top:14px;padding:17px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.room-history-text{margin:8px 0 14px;min-height:44px;font-size:13px;line-height:1.7;color:#6f6559}
+.room-history-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.room-history-actions .quiet-button{padding:10px 7px}
+.room-history-hint{font-size:11px;color:var(--muted);line-height:1.6;margin:11px 0 0}
+@media(min-width:600px){.room-history{padding:22px}}
+
+/* v6: 観察から気づく「いつもの居場所」 */
+.favorite-panel{margin-top:14px;padding:17px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.favorite-text{font-size:13px;line-height:1.8;color:#625a4e;margin:10px 0 8px;min-height:45px}
+.favorite-hint{font-size:11px;color:var(--muted);line-height:1.6;margin:9px 0 0}
+@media(min-width:600px){.favorite-panel{padding:22px}}
+
+
+/* v7: 発見ノートに残る、居場所の思い出 */
+.favorite-story-button{display:block;margin-top:12px;width:100%;text-align:center}
+.place-journal{padding:16px 0;margin:14px 0;border-top:1px solid var(--line)}
+.journal-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.journal-heading h3{font-size:15px;letter-spacing:.02em;margin:0}
+.journal-heading span{font-size:11px;color:var(--muted)}
+.journal-intro,.journal-help{font-size:12px;line-height:1.7;color:var(--muted);margin:10px 0}
+.journal-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
+.journal-tab{font-size:12px;min-height:34px;padding:6px 11px;border:1px solid #ddd2c1;color:var(--ink);border-radius:999px;background:#fff9ee}
+.journal-tab[aria-pressed="true"]{background:#e7eee1;border-color:#8ea385;color:#52694b;font-weight:700}
+.journal-tab:focus-visible{outline:3px solid #8ea385;outline-offset:2px}
+.place-journal-entries{list-style:none;display:grid;gap:10px;padding:0;margin:0}
+.journal-entry{padding:12px 13px;border-radius:13px;border:1px solid var(--line);background:#fbf7ef}
+.journal-entry-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:11px}
+.journal-tag{border-radius:6px;background:#eee7d8;padding:3px 7px;color:#6a5c4b;font-weight:700}
+.journal-entry-title{margin:8px 0 3px;font-size:13px;font-weight:700}
+.journal-entry-text{margin:0;font-size:13px;line-height:1.65}
+.journal-entry-note{margin:5px 0 0;color:#827563;font-size:12px;line-height:1.7}
+.recent-heading{font-size:13px;margin:15px 0 10px}
+.journal-help{font-size:11px;margin:13px 0 0}
+@media(min-width:600px){.journal-entry{padding:14px 16px}.journal-tabs{gap:8px}}
+
+/* v8: 居場所・交流・おもちゃの思い出を横断するフィルター */
+.journal-tabs[hidden]{display:none}
+.journal-place-tabs{padding:10px;background:#f7f2e9;border-radius:11px;margin-top:-3px}
+.journal-entry-time{font-variant-numeric:tabular-nums}
+@media(max-width:390px){.journal-tab{font-size:11px;padding:6px 9px}}
+
+/* v9: 「思い出のつづき」・5ステップの初回イベント */
+.memory-panel{margin-top:14px;padding:17px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.memory-panel p{margin:8px 0 0;line-height:1.8;color:#6a6054;font-size:13px}
+.action-button.invitation-active{background:#e4efe1;border:2px solid #7d9870;color:#506846;font-weight:700;animation:gentle-glow 2.4s ease-in-out infinite}
+@keyframes gentle-glow{50%{box-shadow:0 0 0 4px #92b48725}}
+@media(min-width:600px){.memory-panel{padding:22px}}
+.intro-screen[hidden],.intro-choices[hidden],.intro-name-group[hidden]{display:none!important}
+.intro-screen{position:fixed;inset:0;z-index:1000;background:#eae0d1;overflow-y:auto;display:grid;place-items:center;padding:20px 14px;min-height:100dvh}
+.intro-card{width:min(100%,480px);padding:clamp(18px,4vw,28px);background:#fffdf8;border:1px solid #e5d8c5;border-radius:24px;box-shadow:0 16px 45px #75695625;color:var(--ink)}
+.intro-step{font-size:11px;font-weight:800;color:#84967d;letter-spacing:.12em;margin:12px 0 7px}
+.intro-title{font-size:24px;line-height:1.35;margin-bottom:9px}
+.intro-description{font-size:13px;line-height:1.8;color:#766b5e;min-height:48px;margin:0 0 14px}
+.intro-scene{position:relative;aspect-ratio:8/5;background:#e8d9bd url("assets/rooms/western.png") center/cover no-repeat;border-radius:16px;overflow:hidden;border:1px solid #d9c7aa}
+.intro-scene canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+.intro-caption{position:absolute;bottom:0;left:0;right:0;margin:0;text-align:center;font-size:12px;line-height:1.5;background:#fff8e9da;padding:10px 5px;min-height:38px}
+.intro-choices{display:grid;grid-template-columns:1fr;gap:8px;margin-top:13px}
+.intro-choices-label{font-size:12px;color:#887b6d;margin:0 0 3px}
+.intro-choices button{border:1px solid #e7daca;border-radius:11px;padding:11px;background:#fff8ed;color:var(--ink);text-align:left;font-size:13px}
+.intro-choices button:focus-visible,.intro-next:focus-visible{outline:3px solid #7e9b78;outline-offset:2px}
+.intro-name-group{display:grid;gap:7px;margin-top:13px}
+.intro-name-group label{font-size:13px;font-weight:700}
+.intro-name-group input{width:100%;padding:12px;border:1px solid #dfd4c4;border-radius:11px;background:#fffaf3;color:var(--ink);font-size:14px}
+.intro-name-group p{color:var(--muted);font-size:11px;margin:0}
+.intro-next{display:block;margin-top:16px;width:100%;padding:13px;font-size:14px;font-weight:700}
+.intro-next:disabled{opacity:.5;cursor:default}
+.intro-footnote{text-align:center;font-size:11px;color:#988b7d;margin:13px 0 0}
+body.intro-active{overflow:hidden}
+@media(max-width:390px){.intro-title{font-size:21px}.intro-description{font-size:12px}.intro-card{padding:16px}}
+
+.intro-preview-link{display:block;margin:13px auto 0;border:0;background:transparent;color:#61785a;text-decoration:underline;font-size:12px;padding:8px}
+.intro-preview-link:focus-visible{outline:3px solid #82977b;outline-offset:2px}
+
+/* v10: 独立したドット絵背景4種。Canvasのペットと家具は共通で重ねる */
+.room-scene,.intro-scene{background-position:center;background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
+.theme-panel{margin-top:14px;padding:17px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.theme-help{font-size:12px;line-height:1.65;color:var(--muted);margin:7px 0 12px}
+.theme-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.theme-choice{min-width:0;border:2px solid var(--line);border-radius:13px;background:#fffaf2;padding:5px;color:var(--ink);display:flex;flex-direction:column;gap:6px;align-items:stretch;transition:background .15s,border-color .15s}
+.theme-choice img{width:100%;aspect-ratio:8/5;display:block;object-fit:cover;border-radius:7px;image-rendering:pixelated;border:1px solid #eadfce}
+.theme-choice span{font-size:12px;line-height:1.25;font-weight:700;padding-bottom:3px;text-align:center}
+.theme-choice[aria-pressed="true"]{background:#eaf0e5;border-color:#789477;box-shadow:inset 0 0 0 1px #b8cbb2}
+.theme-choice:focus-visible{outline:3px solid #779e79;outline-offset:3px}
+@media(max-width:480px){.theme-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.theme-choice img{aspect-ratio:8/5}.theme-choice span{font-size:12px}}
+@media(min-width:600px){.theme-panel{padding:22px}}
+
+/* v11: ゲーム内の天気と季節。天気演出は窓の中のみCanvasで表示します。 */
+.weather-label{z-index:2;pointer-events:none;max-width:calc(100% - 24px);font-weight:700;
+  border:1px solid #ffffff6b;box-shadow:0 2px 6px #574d3a14}
+.weather-panel{padding:12px 16px 13px;background:#faf6ed;border-top:1px solid var(--line);}
+.weather-main{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px 12px}
+.weather-kicker{font-size:10px;letter-spacing:.09em;color:#988c78;font-weight:700}
+.weather-main strong{font-size:15px;color:#665a4d;letter-spacing:.02em}
+.weather-panel p{font-size:12px;line-height:1.6;color:#7c7061;margin:6px 0 0}
+.weather-panel .weather-pet-hint{color:#697d64;margin-top:4px}
+.weather-disclaimer{display:block;font-size:10px;line-height:1.6;color:#a19686;margin-top:7px}
+@media(min-width:600px){.weather-panel{padding:14px 19px}}
+
+
+/* v12: おめかし屋さん — headwear shop and interaction points */
+.wardrobe-panel{margin-top:14px;padding:17px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.wardrobe-wallet{display:flex;align-items:center;gap:15px;justify-content:space-between;padding:14px 15px;margin:12px 0 10px;border:1px solid #d7dfc8;background:#eff3e8;border-radius:15px}
+.wardrobe-wallet>div:first-child{flex-shrink:0}
+.wallet-kicker{display:block;font-size:11px;font-weight:700;color:#607957;letter-spacing:.04em}
+#bondPointBalance{display:block;margin-top:4px;font-size:26px;line-height:1;color:#53724f;font-variant-numeric:tabular-nums}
+#bondPointBalance small{font-size:12px;font-weight:700}
+.wallet-note{max-width:320px;font-size:11px;line-height:1.65;color:#6f7c63}
+.wardrobe-message{min-height:28px;margin:8px 0 12px;font-size:12px;color:#786b5c;line-height:1.7}
+.headwear-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.headwear-card{min-width:0;border-radius:14px;padding:10px 8px;background:#fffaf1;border:1px solid #e6d9c7;display:grid;grid-template-columns:48px 1fr;align-items:center;gap:6px 10px;text-align:left;color:var(--ink);transition:background .12s,border-color .12s}
+.headwear-card .headwear-icon{width:48px;height:43px;object-fit:contain;image-rendering:pixelated;filter:none}
+.headwear-details{display:flex;flex-direction:column;gap:3px;min-width:0}
+.headwear-name{font-size:12px;font-weight:800;line-height:1.35}
+.headwear-detail{font-size:10px;color:#918371;line-height:1.4}
+.headwear-action{grid-column:1/-1;display:block;padding:5px 6px;border-radius:8px;background:#f0e8db;color:#655849;text-align:center;font-size:11px;font-weight:800}
+.headwear-card.equipped{border:2px solid #79977a;background:#ecf2e6;padding:9px 7px}
+.headwear-card.equipped .headwear-action{background:#789779;color:#fff}
+.headwear-card.can-unlock .headwear-action{background:#f4dfb8;color:#806035}
+.headwear-card:disabled{opacity:.66;cursor:default}
+.headwear-card:not(:disabled):active{transform:scale(.98)}
+.headwear-card:focus-visible{outline:3px solid #82977b;outline-offset:3px}
+.wardrobe-footnote{font-size:11px;line-height:1.6;color:var(--muted);margin:12px 0 0}
+@media(min-width:600px){.wardrobe-panel{padding:22px}.headwear-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.headwear-card{grid-template-columns:1fr;text-align:center;justify-items:center;padding:9px 6px}.headwear-details{text-align:center}.headwear-action{width:100%}.headwear-card.equipped{padding:8px 5px}.headwear-card .headwear-icon{width:54px;height:46px}}
+@media(max-width:370px){.wardrobe-wallet{padding:10px;gap:8px}.wallet-note{font-size:10px}.headwear-card{grid-template-columns:40px 1fr;gap:4px 6px;padding:7px 5px}.headwear-card .headwear-icon{width:39px;height:39px}.headwear-name{font-size:11px}}
