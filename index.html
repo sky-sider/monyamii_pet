@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4ead9">
+  <title>ちいさな同居人 | おへやと好奇心</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div><p class="eyebrow">A TINY CREATURE, A LITTLE LIFE</p><h1>ちいさな同居人</h1></div>
+      <div class="day-chip" id="dayLabel">1日目</div>
+    </header>
+
+    <section class="room-card" aria-label="ペットのいる部屋">
+      <div class="room-scene" id="roomScene">
+        <div class="weather-label" id="weatherLabel">窓の外は晴れ</div>
+        <div class="thought" id="thought" aria-live="polite">…？</div>
+        <canvas id="petCanvas" width="320" height="200" tabindex="0" aria-label="ペットと家具がある部屋。配置中はタップして場所を決定"></canvas>
+        <div class="room-caption" id="roomCaption">部屋の隅で、小さな物音がしました。</div>
+      </div>
+      <div class="room-tools">
+        <button class="quiet-button" id="observeBtn">そっと見守る</button>
+        <button class="quiet-button" id="callBtn">名前を呼ぶ</button>
+      </div>
+    </section>
+
+    <section class="item-panel" aria-label="部屋に置くおもちゃと家具">
+      <div class="section-heading"><h2>おへやのもの</h2><span>タップして配置</span></div>
+      <p class="item-help" id="placeHint">アイテムを選ぶと、床の左右の位置に置いたり、移動させたりできます。</p>
+      <div class="item-tray" id="itemTray">
+        <button class="item-choice" data-place-item="ball" aria-pressed="false"><img src="assets/items/ball.png" alt=""><span class="item-name">毛糸玉</span><span class="item-sub">配置済み</span></button>
+        <button class="item-choice" data-place-item="cushion" aria-pressed="false"><img src="assets/items/cushion.png" alt=""><span class="item-name">クッション</span><span class="item-sub">配置済み</span></button>
+        <button class="item-choice" data-place-item="pebble" aria-pressed="false"><img src="assets/items/pebble.png" alt=""><span class="item-name">きらきら小石</span><span class="item-sub">部屋に置く</span></button>
+        <button class="item-choice" data-place-item="plant" aria-pressed="false"><img src="assets/items/plant.png" alt=""><span class="item-name">鉢植え</span><span class="item-sub">部屋に置く</span></button>
+      </div>
+      <button class="quiet-button cancel-place" id="cancelPlaceBtn" hidden>配置をやめる</button>
+      <p class="item-footnote">好きなものは、教えてくれません。そっと様子を観察してみましょう。</p>
+    </section>
+
+    <section class="pet-panel">
+      <div class="pet-heading">
+        <div><p class="eyebrow">YOUR LITTLE ROOMMATE</p><h2 id="petNameHeading">モフリ</h2><p class="subline" id="petIntro">仕草を眺めて、この子のことを知っていきましょう。</p></div>
+        <button class="icon-button" id="renameBtn" aria-label="名前を変える" title="名前を変える">✎</button>
+      </div>
+      <div class="signals" aria-label="観察できる様子">
+        <div class="signal"><span class="signal-icon">☾</span><span id="sleepSignal">目を開けて辺りを見ている</span></div>
+        <div class="signal"><span class="signal-icon">♡</span><span id="moodSignal">自分のペースで過ごしている</span></div>
+      </div>
+      <div class="actions">
+        <button class="action-button" id="foodBtn"><span class="action-emoji">🍎</span><span>食べ物を置く</span></button>
+        <button class="action-button" id="playBtn"><span class="action-emoji">🧶</span><span>遊びに誘う</span></button>
+        <button class="action-button" id="petBtn"><span class="action-emoji">✋</span><span>そっと近づく</span></button>
+      </div>
+    </section>
+
+    <section class="bottom-panel">
+      <div class="section-heading"><h2>今日の小さな発見</h2><span id="discoveryCount">0件</span></div>
+      <p id="discoveryText">ペットの行動を観察すると、少しずつこの子のことがわかります。</p>
+      <div class="log" id="log" aria-live="polite"><p>モフリが部屋にやってきました。</p></div>
+    <button class="reset-link" id="resetBtn">最初からやり直す</button>
+  </section>
+  <footer>感情の数値は表示されません。仕草を観察してみましょう。暮らしの記録はこのブラウザ内に保存されます。</footer>
+</main>
+
+<dialog id="nameDialog">
+  <form method="dialog" id="nameForm"><h2>この子の名前</h2><p>好きな名前をつけてあげましょう。</p><input id="nameInput" maxlength="12" placeholder="モフリ" autocomplete="off"><div class="dialog-buttons"><button value="cancel" class="quiet-button">あとで</button><button id="saveNameBtn" value="save" class="primary-button">決定</button></div></form>
+</dialog>
+</body>
+</html>
