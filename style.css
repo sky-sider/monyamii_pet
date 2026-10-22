@@ -655,3 +655,14 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background-im
   #page-home > .pet-panel .signals{margin:12px 0;}
   #page-home > .today-panel{margin-bottom:4px;}
 }
+
+
+/* v27 追加修正：スマホ版「いっしょ」の2タブはスクロールに追従させない */
+@media (max-width: 649px) {
+  #page-home > .mobile-page-switcher[data-mobile-group="home"] {
+    position: static;
+    top: auto;
+    z-index: auto;
+    background: transparent;
+  }
+}
