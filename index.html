@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#f4ead9" name="theme-color"/>
-<title>ちいさな同居人 | おへやをすっきり整えた v14</title>
+<title>ちいさな同居人 | ふわふわ、そっとなでる v15</title>
 <link href="style.css" rel="stylesheet"/>
 <script defer="" src="script.js"></script>
 </head>
@@ -48,7 +48,7 @@
 <div class="room-scene" id="roomScene">
 <div class="weather-label" id="weatherLabel">窓の外は晴れ</div>
 <div aria-live="polite" class="thought" id="thought">…？</div>
-<canvas aria-label="ペットと家具がある部屋。配置中はタップして場所を決定" height="200" id="petCanvas" tabindex="0" width="320"></canvas>
+<canvas aria-label="ペットと家具がある部屋。ペットをタップまたはなぞってなでられます。家具の配置中はタップで位置を決定" height="200" id="petCanvas" tabindex="0" width="320"></canvas>
 <div class="room-caption" id="roomCaption">部屋の隅で、小さな物音がしました。</div>
 </div><details class="weather-disclosure"><summary><span aria-hidden="true">☀</span><strong id="weatherNow">秋の晴れ</strong><span class="weather-summary-action">空模様のくわしい様子 <span aria-hidden="true">⌄</span></span></summary><div aria-label="おへやの天気と季節" class="weather-panel">
 
@@ -64,6 +64,7 @@
 <button class="quiet-button" id="observeBtn">そっと見守る</button>
 <button class="quiet-button" id="callBtn">名前を呼ぶ</button>
 </div>
+<p class="pet-touch-help" id="petTouchHelp" role="status">ペットをタップ、または指でそっとなぞってみましょう。</p>
 </section><section class="pet-panel">
 <div class="pet-heading">
 <div><p class="eyebrow">YOUR LITTLE ROOMMATE</p><h2 id="petNameHeading">モフリ</h2><p class="subline" id="petIntro">仕草を眺めて、この子のことを知っていきましょう。</p></div>
@@ -77,6 +78,7 @@
 <button class="action-button" id="foodBtn"><span class="action-emoji">🍎</span><span>食べ物を置く</span></button>
 <button class="action-button" id="playBtn"><span class="action-emoji">🧶</span><span>遊びに誘う</span></button>
 <button class="action-button" id="petBtn"><span class="action-emoji">✋</span><span>そっと近づく</span></button>
+<button class="action-button" id="strokePetBtn"><span class="action-emoji">♡</span><span>そっとなでる</span></button>
 </div>
 </section><section aria-label="今日の小さな発見" class="today-panel">
 <div class="section-heading"><h2>今日のひとこと</h2><button class="text-route" data-open-app-tab="notes" type="button">ノートへ →</button></div>
@@ -133,7 +135,7 @@
 </section><section aria-label="思い出から生まれる生活習慣" class="memory-panel">
 <div class="section-heading"><h2>思い出のつづき</h2><span>経験がつながる</span></div>
 <p id="memoryHabitText">一緒に過ごした経験が、次の行動につながるかもしれません。</p>
-</section><section aria-label="まだ知らないひみつの癖" class="secret-panel">
+</section><section aria-label="なでられることの思い出" class="petting-memory-panel"><div class="section-heading"><h2>なでられた日のこと</h2><span>ふれあいの記憶</span></div><p id="pettingHabitText">まだ、なでられたときにどう感じるかはわかりません。</p></section><section aria-label="まだ知らないひみつの癖" class="secret-panel">
 <div class="section-heading"><h2>この子だけのひみつ</h2><span>観察して発見</span></div>
 <p id="secretHabitText">いつか、この子だけの不思議な癖が見つかるかもしれません。</p>
 <p class="secret-footnote">何もしない時間にも、新しい行動が現れることがあります。小石やクッションを置くと見られる癖もあります。</p>

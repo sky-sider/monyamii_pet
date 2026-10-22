@@ -1,6 +1,6 @@
 'use strict';
 
-// ちいさな同居人 v14 — 画面整理。v13以前のゲームデータとセーブキーは変更しません。
+// ちいさな同居人 v15 — 直接なでる・甘える・学習。既存のセーブキーと全機能は保持。
 // 数値は内部でのみ扱います。プレイヤーには仕草と行動で伝えます。
 const SAVE_KEY = 'mofuri-pet-save-v1'; // v1 / v2 のセーブデータを引き継ぐ
 const canvas = document.getElementById('petCanvas');
@@ -277,6 +277,10 @@ const MOMENT_DEFINITIONS = {
   food_first: {category:'interaction',label:'食べ物を受け取った日'},
   call_response: {category:'interaction',label:'呼び声に応えた日'},
   welcome_close: {category:'interaction',label:'そばで安心してくれた日'},
+  first_petting: {category:'interaction',label:'初めてなでた日'},
+  petting_request: {category:'interaction',label:'もっとなでて、と伝えてくれた日'},
+  petting_answer: {category:'interaction',label:'なでてのおねだりに応えた日'},
+  petting_sleep: {category:'interaction',label:'眠そうなときにそっとなでた日'},
   came_close: {category:'interaction',label:'自分から近づいてきた日'},
   came_close_again: {category:'interaction',label:'また自分から近づいてきた日'},
   first_meeting: {category:'interaction',label:'初めて出会った日'},
@@ -326,6 +330,51 @@ function renderMemoryHint() {
   else if(together>=2) node.textContent=`そばで静かに過ごした経験が増えています。自分から近づくこともあるかもしれません。`;
   else node.textContent=`まだ一緒に過ごし始めたばかり。これからの出来事が、小さな習慣につながるかもしれません。`;
 }
+
+// v15: なでられることの記憶。生まれつきの触れあいへの気質は経験による学習と別に保存。
+function newPettingMemory(){
+  const base=Math.round(Math.random()*24-12);
+  return {innate:base,affinity:0,familiarity:0,attempts:0,accepted:0,
+    declined:0,strokes:0,begs:0,begAnswers:0,lastPetAt:0,lastBegAt:0};
+}
+function normalizePettingMemory(old){
+  const def=newPettingMemory();
+  const source=old&&typeof old==='object'?old:{};
+  const counts=['attempts','accepted','declined','strokes','begs','begAnswers'];
+  const value={...def,innate:clamp(Number.isFinite(source.innate)?source.innate:def.innate,-12,12),
+    affinity:clamp(Number.isFinite(source.affinity)?source.affinity:0,-30,35),
+    familiarity:clamp(Number.isFinite(source.familiarity)?source.familiarity:0,0,100),
+    lastPetAt:Number.isFinite(source.lastPetAt)?source.lastPetAt:0,
+    lastBegAt:Number.isFinite(source.lastBegAt)?source.lastBegAt:0};
+  for(const key of counts)value[key]=clamp(Number.isFinite(source[key])?source[key]:0,0,100000);
+  return value;
+}
+function pettingPreference(){
+  const m=pet.pettingMemory;
+  return pet.sociability*.20+pet.attachment*.18-pet.caution*.22+
+    pet.emotions.safety*.34-pet.emotions.wariness*.31+m.innate+m.affinity;
+}
+function renderPettingHint(){
+  const help=$('petTouchHelp'),habit=$('pettingHabitText'),button=$('strokePetBtn');
+  const asking=pettingBeg?.stage==='offering'&&pettingBeg.until>Date.now();
+  if(help){
+    if(placingType)help.textContent='家具の場所をタップして決めてください。配置中はなでる操作をお休みします。';
+    else if(asking)help.textContent=`${pet.name}がこちらをじっと見ています。もう一度なでてほしいのかもしれません。`;
+    else if(socialVisit?.stage==='resting')help.textContent=`${pet.name}が自分からそばに来ています。タップや指でなぞって、そっとなでられます。`;
+    else help.textContent='ペットを直接タップ、または指でそっとなぞってみましょう。';
+  }
+  if(button){button.querySelector('span:last-child').textContent=asking?'おねだりに応える':'そっとなでる';
+    button.classList.toggle('petting-request-active',!!asking);}
+  if(habit){
+    const m=pet.pettingMemory;
+    habit.textContent=m.accepted===0?'まだ、なでられたときにどう感じるかはわかりません。':
+      m.begAnswers>0?`${pet.name}はなでられたあと、もう一度そばに来たことがあります。少しずつ甘え方を覚えているのかもしれません。`:
+      m.declined>m.accepted?`${pet.name}は触られるより、そばで静かに過ごす方が落ち着くのかもしれません。`:
+      m.strokes>=2?`${pet.name}は指でゆっくりなぞられると、体をゆるめることがあるようです。`:
+      `${pet.name}はそっとなでると、時々安心したような仕草を見せます。`;
+  }
+}
+
 const newPlaceMemory = () => ({
   spots: Object.fromEntries(placeKeys.map(key=>[key,emptyPlaceExperience()])),
   // 個体生成時に一度だけ決まり、経験とは別に保存される潜在的な好み。
@@ -371,7 +420,7 @@ function normalizeWardrobe(old){
   const unlocked=[...new Set(['leaf',...(Array.isArray(source.unlocked)?source.unlocked:[])])].filter(id=>HEADWEAR_BY_ID[id]);
   const today=localDayKey();
   const lastRewards={};
-  if(source.lastRewards&&typeof source.lastRewards==='object') for(const key of ['observe','call','food','play','approach','invitation']) {
+  if(source.lastRewards&&typeof source.lastRewards==='object') for(const key of ['observe','call','food','play','approach','invitation','petting']) {
     if(Number.isFinite(source.lastRewards[key])&&source.lastRewards[key]>0) lastRewards[key]=source.lastRewards[key];
   }
   return {
@@ -663,7 +712,7 @@ function newPet() {
     x: 160, targetX: 160, facing: 1,
     action: 'idle', actionUntil: 0, nextDecision: 0,
     lastRealTime: Date.now(), dayStarted: Date.now(), day: 1,
-    foodCount: 0, playCount: 0, wardrobe:newWardrobe(), fashionMemory:newFashionMemory(), secretMemory:newSecretMemory(), bondMemory:newBondMemory(), worldMemory:newWorldMemory(), roomItems: initialRoomItems(), objectMemory: initialObjectMemory(), roomTraces: initialRoomTraces(), placeMemory: newPlaceMemory(), placeJournal: newPlaceJournal(), momentJournal: newMomentJournal(), discoveries: [],
+    foodCount: 0, playCount: 0, pettingMemory:newPettingMemory(), wardrobe:newWardrobe(), fashionMemory:newFashionMemory(), secretMemory:newSecretMemory(), bondMemory:newBondMemory(), worldMemory:newWorldMemory(), roomItems: initialRoomItems(), objectMemory: initialObjectMemory(), roomTraces: initialRoomTraces(), placeMemory: newPlaceMemory(), placeJournal: newPlaceJournal(), momentJournal: newMomentJournal(), discoveries: [],
     logs: ['小さな生き物が部屋にやってきました。']
   };
 }
@@ -705,6 +754,9 @@ let roomSummaryVisible = false;
 let journalFilter = 'all';
 let journalCategory = 'all';
 let socialVisit = null; // ペット自身がこちらへ歩いてくる行動（観察して記録する）
+let pettingBeg = null; // またなでてほしいという一時的なお願い。保存しない。
+let lastPetPointerAt=0;
+let petPointer=null;
 const objectSprites = {};
 for (const [type, info] of Object.entries(ROOM_ITEM_TYPES)) {
   const image = new Image();
@@ -855,6 +907,7 @@ function normalizePet() {
   pet.bondMemory.invitationCount=clamp(Number(oldBond.invitationCount)||0,0,9999);
   pet.bondMemory.invitationAccepted=clamp(Number(oldBond.invitationAccepted)||0,0,9999);
   pet.bondMemory.lastInvitationAt=Number.isFinite(oldBond.lastInvitationAt)?oldBond.lastInvitationAt:0;
+  pet.pettingMemory=normalizePettingMemory(pet.pettingMemory);
   pet.wardrobe = normalizeWardrobe(pet.wardrobe);
   pet.fashionMemory=normalizeFashionMemory(pet.fashionMemory);
   pet.secretMemory=normalizeSecretMemory(pet.secretMemory);
@@ -1031,6 +1084,7 @@ function renderUI() {
   renderInvitationButton();
   renderWardrobe();
   renderSecretHint();
+  renderPettingHint();
   refreshTodayHighlight();
 }
 
@@ -1093,6 +1147,20 @@ function drawPet(time) {
       squashY = 0.96;
     } else if (reaction.kind === 'sway') {
       angle = Math.sin(elapsed / 250) * 0.055 * envelope;
+    } else if(reaction.kind==='pet_cuddle'){
+      // 吹き出し型の体を横にふわっと伸ばし、撫でる動作に応える。
+      squashX=1+0.16*envelope;
+      squashY=1-0.13*envelope;
+      angle=Math.sin(elapsed/470)*0.023*envelope;
+      lift=2.6*envelope;
+    } else if(reaction.kind==='pet_sleep'){
+      squashX=1+0.075*envelope;
+      squashY=1-0.07*envelope;
+      angle=Math.sin(elapsed/500)*0.018*envelope;
+    } else if(reaction.kind==='pet_wiggle'){
+      angle=Math.sin(elapsed/150)*0.075*envelope;
+      lift=Math.abs(Math.sin(elapsed/240*Math.PI))*4.4*envelope;
+      squashX=1+0.09*envelope;
     } else if (reaction.kind === 'spin') {
       angle = (elapsed / 600) * Math.PI * 2 * envelope;
       squashX = 0.93 + Math.abs(Math.cos(elapsed / 200)) * 0.07;
@@ -1118,6 +1186,13 @@ function drawPet(time) {
   if(memoryInvitation?.stage==='bring'){
     const ball=objectSprites.ball;
     if(ball?.complete && ball.naturalWidth) ctx.drawImage(ball,Math.round(pet.x+pet.facing*18-13),128,26,26);
+  }
+  if(active && ['pet_cuddle','pet_wiggle'].includes(reaction.kind)){
+    // 体に寄り添うピクセルの小さなハート。数値ラベルは表示しない。
+    const px=Math.round(pet.x+32),py=Math.round(91-4*Math.sin(time/300));
+    ctx.fillStyle='#e49a9f';
+    ctx.fillRect(px,py,3,3);ctx.fillRect(px+6,py,3,3);
+    ctx.fillRect(px-2,py+3,13,4);ctx.fillRect(px,py+7,9,3);ctx.fillRect(px+3,py+10,3,3);
   }
   if (active && reaction.kind === 'hop') {
     // 喜びは文字のラベルでなく、小さなピクセルのきらめきでも表す。
@@ -1712,7 +1787,7 @@ function startAutonomousItemAction(now) {
 }
 // 呼ばれたときの反応とは別に、ペットが自分の意思でこちらへ歩く。
 function beginAutonomousSocialVisit(now){
-  if(socialVisit || objectVisit || placeVisit || reaction || pet.tired>70) return false;
+  if(socialVisit || objectVisit || placeVisit || reaction || pettingBeg || pet.tired>70) return false;
   if(Math.abs(pet.x-160)<38 || pet.emotions.wariness>76) return false;
   const learnedCompany=Math.min(24,memoryCount('answeredCall')*4+memoryCount('calmTogether')*3);
   const chance=clamp((pet.sociability*0.38+pet.emotions.connection*0.48+pet.emotions.safety*0.22-pet.emotions.wariness*0.25+learnedCompany)/240,0.06,0.36);
@@ -1736,11 +1811,103 @@ function updateAutonomousSocialVisit(now){
     rememberSharedExperience('calmTogether');
     $('roomCaption').textContent=`${pet.name}は自分からこちらへ来て、しばらくそばにいます。`;
     rememberSpontaneousApproach(now);
+    maybeInviteToPet(now,'arrival');
     renderUI();save();
   }else if(socialVisit.stage==='resting' && now>=socialVisit.until){
     socialVisit=null;
   }
 }
+
+// —— v15: 直接なでる。タップ・スワイプ・ボタンのいずれからも同じ処理を使います ——
+function maybeInviteToPet(now,reason='after_pet'){
+  const m=pet.pettingMemory;
+  if(pettingBeg || m.accepted===0 || pet.tired>80 || pet.hunger>88 ||
+    pet.emotions.wariness>68 || now-m.lastBegAt<120000) return false;
+  const base=(reason==='arrival' ? .09 : .25);
+  const chance=clamp(base+m.accepted*.035+Math.max(0,pettingPreference())*.0035,0,.68);
+  if(Math.random()>chance)return false;
+  m.lastBegAt=now;m.begs++;
+  pettingBeg={stage:'waiting',at:now,readyAt:now+(reason==='arrival'?950:3250),until:now+14500};
+  return true;
+}
+function updatePettingBeg(now){
+  if(!pettingBeg)return;
+  if(onboardingActive||placingType||now>=pettingBeg.until||pet.tired>88){
+    pettingBeg=null;renderPettingHint();return;
+  }
+  if(pettingBeg.stage==='waiting' && now>=pettingBeg.readyAt && !reaction){
+    pettingBeg.stage='offering';
+    const dest=clamp(pet.x+(pet.x<160?8:-8),45,275);
+    startAction('idle',3200,'calm',dest);
+    reaction={kind:'lean',gesture:'こちらをじっと見つめ、もう一度体を寄せている',start:now,until:now+3100,duration:3100};
+    pet.nextDecision=now+3100;
+    $('roomCaption').textContent=`${pet.name}は少し考えてから、もう一度体を寄せてきました。`;
+    showThought('…♪');
+    recordMoment('petting_request',`${pet.name}はなで終わったあと、もう一度こちらに寄ってきました。`,
+      '呼ばれたのではなく、ペットの方から再び寄ってきた場面です。');
+    renderPettingHint();
+    save();
+  }
+}
+function strokePet(mode='tap'){
+  if(onboardingActive || placingType || !canInteract())return false;
+  const now=Date.now(), e=pet.emotions,m=pet.pettingMemory;
+  const answering=!!(pettingBeg?.stage==='offering'&&pettingBeg.until>now);
+  const approached=!!(socialVisit?.stage==='resting');
+  const asleep=pet.action==='sleep';
+  // おねだりに応えるときだけ、先ほどのお願いが消える前に理由を記録する。
+  pettingBeg=null;
+  m.attempts++;m.lastPetAt=now;
+  const preference=pettingPreference()+(approached?20:0)+(answering?23:0);
+  const shy=e.wariness>72 || (pet.caution>70&&e.safety<44);
+  const declines=!asleep && (shy && Math.random()<.65 || preference<4 && Math.random()<.68 || preference<16&&Math.random()<.23);
+  if(declines){
+    m.declined++;m.familiarity=clamp(m.familiarity+.7,0,100);
+    adjustEmotion({wariness:1,interest:1});
+    // 身を引かれた経験を罰にしない。ポイントも減らない。
+    performReaction({action:'walk',kind:'recoil',duration:2500,mood:'wary',
+      destination:clamp(pet.x+(pet.x<160?-15:15),45,275),
+      gesture:'体をきゅっと縮めて、そっと離れている',
+      caption:`${pet.name}は今はなでられたくないようで、少し離れました。`,thought:'…'});
+    interactionUntil=now+1500;
+    renderPettingHint();save();
+    return true;
+  }
+  m.accepted++;
+  m.familiarity=clamp(m.familiarity+(mode==='stroke'?3.2:2),0,100);
+  m.affinity=clamp(m.affinity+(asleep?.35:mode==='stroke'?1.35:.9),-30,35);
+  if(mode==='stroke')m.strokes++;
+  adjustEmotion({safety:asleep?1:3,connection:asleep?0:2,wariness:-2,interest:asleep?0:-1});
+  rememberSharedExperience('calmTogether');
+  awardBondPoints('petting',6);
+  if(asleep){
+    performReaction({action:'sleep',kind:'pet_sleep',duration:3300,mood:'calm',
+      gesture:'目を閉じたまま、呼吸に合わせてゆっくり体を伸ばしている',
+      caption:`${pet.name}は眠ったまま、なでる手に合わせてほんの少し体を伸ばしました。`,thought:'すぅ…'});
+    recordMoment('petting_sleep',`${pet.name}が眠っている間にそっとなでると、体がゆっくり伸びました。`,
+      '眠りを邪魔せず、やさしくふれたときの反応です。');
+  }else{
+    const playful=e.interest>66&&pet.activity>60&&Math.random()<.27;
+    const content=playful ?
+      {kind:'pet_wiggle',action:'happy',gesture:'気持ちよさそうに体を揺らし、ぽよんと跳ねている',caption:`${pet.name}はなでられると、嬉しそうにぽよんと跳ねました！`,thought:'♪'} :
+      {kind:'pet_cuddle',action:'idle',gesture:'ふわっと横に伸び、目を細めている',caption:`${pet.name}はなでる手に合わせて、ふわっと体を伸ばしました。`,thought:'…♪'};
+    performReaction({...content,duration:3400,mood:'happy'});
+  }
+  if(m.accepted===1) recordMoment('first_petting',`${pet.name}を初めてそっとなでました。${asleep?'眠ったまま、小さく体を伸ばしました。':'体をふわっと伸ばして、なでる手に応えてくれました。'}`,
+    'このゲームで初めて実際になでられた瞬間の記録です。以前の交流は推測して追加しません。');
+  if(answering){
+    m.begAnswers++;
+    recordMoment('petting_answer',`${pet.name}が自分からもう一度そばに来たので、なでてあげました。`,
+      'ペットからのおねだりに、プレイヤーが応えた出来事です。');
+  }
+  if(m.accepted>=3)discover('gentle-petting',`${pet.name}はそっとなでられると、体を伸ばしてくつろぐことがあるようです。`);
+  interactionUntil=now+1500;
+  // おねだりへの返答から連鎖して永遠に要求し続けないようにする。
+  if(!asleep&&!answering)maybeInviteToPet(now,'after_pet');
+  renderPettingHint();save();
+  return true;
+}
+
 // —— v9: 一緒に遊んだ記憶から生まれる、自発的なお誘い ——
 function renderInvitationButton() {
   const button=$('playBtn');
@@ -1831,7 +1998,7 @@ function answerYarnInvitation(){
 function chooseAutonomousAction(now) {
   if (now < pet.actionUntil || now < pet.nextDecision) return;
   // 目的地へ移動している途中は、他の行動を選んで中断しない。
-  if (memoryInvitation || socialVisit || roomSpecialVisit || (objectVisit && objectVisit.stage==='approach') || (placeVisit && placeVisit.stage==='approach')) return;
+  if (memoryInvitation || socialVisit || roomSpecialVisit || pettingBeg || (objectVisit && objectVisit.stage==='approach') || (placeVisit && placeVisit.stage==='approach')) return;
   // 同じ種族でも朝型・昼型・夜型があり、活動・休息の選びやすさに少し差がある。
   const hour=new Date(now).getHours();
   const activeHours=pet.lifeRhythm==='朝型' ? hour>=5&&hour<13 :
@@ -1911,6 +2078,7 @@ function tick(timestamp) {
   e.connection = clamp(e.connection + dt * 0.006);
 
   if (reaction && now >= reaction.until) reaction = null;
+  updatePettingBeg(now);
   if (now >= pet.actionUntil && pet.action !== 'idle' && !secretVisit &&
       !(objectVisit && objectVisit.stage==='approach') && !(placeVisit && placeVisit.stage==='approach') && !(socialVisit && socialVisit.stage==='approach') && !(roomSpecialVisit && roomSpecialVisit.stage==='approach')) {
     pet.action = 'idle';
@@ -2134,13 +2302,46 @@ function placeSelectedItem(x) {
   addLog(`${ROOM_ITEM_TYPES[id].label}を部屋に置きました。`);
   save();
 }
-function pointToX(event) {
+function pointerToRoom(event){
   const rect=canvas.getBoundingClientRect();
-  return clamp((event.clientX-rect.left)/rect.width*canvas.width,36,284);
+  return {x:(event.clientX-rect.left)/rect.width*canvas.width,
+    y:(event.clientY-rect.top)/rect.height*canvas.height};
 }
-canvas.addEventListener('pointermove',event=>{if(placingType) previewX=pointToX(event);});
+function pointToX(event){return clamp(pointerToRoom(event).x,36,284);}
+function pointerHitsPet(point){
+  // 48x40ドットの拡大スプライトの体部分。帽子だけを触った場合は対象外。
+  const dx=(point.x-pet.x)/43,dy=(point.y-132)/32;
+  return dx*dx+dy*dy<=1.20;
+}
+canvas.addEventListener('pointerdown',event=>{
+  if(placingType||onboardingActive||!event.isPrimary||!pointerHitsPet(pointerToRoom(event)))return;
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  const point=pointerToRoom(event);
+  petPointer={id:event.pointerId,last:point,length:0};
+  try{canvas.setPointerCapture(event.pointerId);}catch(_error){}
+  event.preventDefault();
+});
+canvas.addEventListener('pointermove',event=>{
+  if(placingType){previewX=pointToX(event);return;}
+  if(!petPointer||event.pointerId!==petPointer.id)return;
+  const next=pointerToRoom(event);
+  petPointer.length+=Math.hypot(next.x-petPointer.last.x,next.y-petPointer.last.y);
+  petPointer.last=next;
+});
+canvas.addEventListener('pointerup',event=>{
+  if(!petPointer||petPointer.id!==event.pointerId)return;
+  const stroke=petPointer.length>=12;
+  petPointer=null;
+  lastPetPointerAt=Date.now();
+  strokePet(stroke?'stroke':'tap');
+  event.preventDefault();
+});
+canvas.addEventListener('pointercancel',event=>{
+  if(petPointer?.id===event.pointerId)petPointer=null;
+});
 canvas.addEventListener('click',event=>{
   if (placingType) { placeSelectedItem(pointToX(event));return; }
+  if(Date.now()-lastPetPointerAt<650)return; // pointerupの直後のclickを重複処理しない
   const x=pointToX(event);
   const near=pet.roomItems.find(item=>Math.abs(item.x-x)<25);
   if (near) {
@@ -2149,10 +2350,13 @@ canvas.addEventListener('click',event=>{
   }
 });
 canvas.addEventListener('keydown',event=>{
-  if (!placingType) return;
+  if(!placingType){
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();strokePet('tap');}
+    return;
+  }
   if(event.key==='ArrowLeft'||event.key==='ArrowRight'){
     event.preventDefault();previewX=clamp(previewX+(event.key==='ArrowLeft'?-10:10),36,284);
-  } else if(event.key==='Enter'||event.key===' '){event.preventDefault();placeSelectedItem(previewX);}
+  }else if(event.key==='Enter'||event.key===' '){event.preventDefault();placeSelectedItem(previewX);}
   else if(event.key==='Escape'){placingType=null;updateItemTray();}
 });
 // —— v9: 一度きりの5ステップの出会い ——
@@ -2288,7 +2492,7 @@ $('introPreviewBtn').addEventListener('click',()=>{
   const originalTheme=pet.roomTheme;
   pet=newPet();pet.roomTheme=originalTheme;normalizePet();beginWearSession();
   applyRoomTheme();
-  reaction=null;objectVisit=null;placeVisit=null;socialVisit=null;roomSpecialVisit=null;memoryInvitation=null;
+  reaction=null;objectVisit=null;placeVisit=null;socialVisit=null;roomSpecialVisit=null;memoryInvitation=null;pettingBeg=null;petPointer=null;
   placingType=null;interactionUntil=0;
   beginIntro();
 });
@@ -2332,6 +2536,7 @@ $('callBtn').addEventListener('click', callPet);
 $('foodBtn').addEventListener('click', offerFood);
 $('playBtn').addEventListener('click', invitePlay);
 $('petBtn').addEventListener('click', approachPet);
+$('strokePetBtn').addEventListener('click',()=>strokePet('tap'));
 $('renameBtn').addEventListener('click', rename);
 $('favoriteStoryBtn').addEventListener('click', openFavoriteStory);
 $('nameForm').addEventListener('submit', event => {
@@ -2346,7 +2551,7 @@ $('resetBtn').addEventListener('click', () => {
   localStorage.removeItem(SAVE_KEY);
   pet=newPet();normalizePet();beginWearSession();
   discovered=new Set();reaction=null;objectVisit=null;placeVisit=null;secretVisit=null;
-  socialVisit=null;roomSpecialVisit=null;memoryInvitation=null;placingType=null;
+  socialVisit=null;roomSpecialVisit=null;memoryInvitation=null;pettingBeg=null;petPointer=null;placingType=null;
   roomSummaryVisible=false;journalFilter='all';journalCategory='all';
   interactionUntil=0;
   $('discoveryText').textContent='ペットの行動を観察すると、少しずつこの子のことがわかります。';
