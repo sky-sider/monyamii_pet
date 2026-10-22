@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#f4ead9" name="theme-color"/>
-<title>ちいさな同居人 | ふわふわ、そっとなでる v15</title>
+<title>ちいさな同居人 | いっしょにおさんぽ v16</title>
 <link href="style.css" rel="stylesheet"/>
 <script defer="" src="script.js"></script>
 </head>
@@ -44,7 +44,27 @@
 <button aria-controls="page-room" aria-selected="false" class="nav-tab" data-app-tab="room" id="tab-room" role="tab" tabindex="-1" type="button"><span aria-hidden="true" class="nav-icon">▦</span><span>おへや</span></button>
 <button aria-controls="page-fashion" aria-selected="false" class="nav-tab" data-app-tab="fashion" id="tab-fashion" role="tab" tabindex="-1" type="button"><span aria-hidden="true" class="nav-icon">✿</span><span>おめかし</span></button>
 <button aria-controls="page-notes" aria-selected="false" class="nav-tab" data-app-tab="notes" id="tab-notes" role="tab" tabindex="-1" type="button"><span aria-hidden="true" class="nav-icon">▤</span><span>ノート</span></button>
-</nav><div class="app-pages"><div aria-labelledby="tab-home" class="app-page" id="page-home" role="tabpanel" tabindex="0"><section aria-label="ペットのいる部屋" class="room-card">
+</nav><div class="app-pages"><div aria-labelledby="tab-home" class="app-page" id="page-home" role="tabpanel" tabindex="0"><section class="walk-launcher" id="walkLauncher" aria-label="おさんぽへ出かける">
+<div class="section-heading"><h2>おさんぽに出かける</h2><span>街・海・山</span></div>
+<p class="walk-guide">この子と、いつもと違う景色を見に行きませんか？ 散歩中も自由に歩き回ります。</p>
+<div class="walk-destinations" id="walkDestinations">
+<button type="button" data-walk-place="town"><img src="assets/walks/town.png" alt="洋風のお店が並ぶ小さな街"/><strong>近所の街</strong><span>看板や花壇</span></button>
+<button type="button" data-walk-place="sea"><img src="assets/walks/seaside.png" alt="貝殻のある穏やかな砂浜"/><strong>海辺</strong><span>貝殻と波</span></button>
+<button type="button" data-walk-place="mountain"><img src="assets/walks/mountain.png" alt="木々と小川のある山の小道"/><strong>山の小道</strong><span>木の実と葉っぱ</span></button>
+</div>
+<div class="walk-collection" id="walkCollection">まだお散歩のお土産はありません。</div>
+</section>
+<section class="walk-session" id="walkSession" hidden aria-label="ペットとのおさんぽ">
+<div class="walk-header"><div><p class="eyebrow">A LITTLE WALK</p><h2 id="walkTitle">海辺</h2></div><button class="quiet-button" id="walkReturnBtn" type="button">⌂ おうちに帰る</button></div>
+<div class="walk-weather" id="walkWeather">晴れの日のおさんぽ</div>
+<div class="walk-scene" id="walkScene"><canvas id="walkCanvas" width="320" height="200" tabindex="0" aria-label="おさんぽ中の風景。ペットをタップ・なぞるとなでられます。景色をタップするとそこへ誘えます"></canvas></div>
+<p class="walk-narration" id="walkNarration" aria-live="polite">今日はどんなことに出会えるでしょう？</p>
+<div class="walk-targets-label">気になるところへ誘ってみる <span>誘いに応じない日もあります</span></div>
+<div class="walk-targets" id="walkTargets"></div>
+<div class="walk-actions"><button id="walkPetBtn" class="quiet-button" type="button">♡ そっとなでる</button><button id="walkObserveBtn" class="quiet-button" type="button">☼ 見守る</button></div>
+<p class="walk-help" id="walkHelp">何も操作しなくても、この子は自分で探索します。いつでも帰宅できます。</p>
+</section>
+<section aria-label="ペットのいる部屋" class="room-card">
 <div class="room-scene" id="roomScene">
 <div class="weather-label" id="weatherLabel">窓の外は晴れ</div>
 <div aria-live="polite" class="thought" id="thought">…？</div>
