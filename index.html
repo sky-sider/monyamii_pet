@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#f4ead9" name="theme-color"/>
-<title>ちいさな同居人 | お散歩の小さな発見 v20</title>
+<title>ちいさな同居人 | スマホUIリニューアル v23</title>
 <link href="style.css" rel="stylesheet"/>
 <script defer="" src="script.js"></script>
 </head>
@@ -44,7 +44,12 @@
 <button aria-controls="page-room" aria-selected="false" class="nav-tab" data-app-tab="room" id="tab-room" role="tab" tabindex="-1" type="button"><span aria-hidden="true" class="nav-icon">▦</span><span>おへや</span></button>
 <button aria-controls="page-fashion" aria-selected="false" class="nav-tab" data-app-tab="fashion" id="tab-fashion" role="tab" tabindex="-1" type="button"><span aria-hidden="true" class="nav-icon">✿</span><span>おめかし</span></button>
 <button aria-controls="page-notes" aria-selected="false" class="nav-tab" data-app-tab="notes" id="tab-notes" role="tab" tabindex="-1" type="button"><span aria-hidden="true" class="nav-icon">▤</span><span>ノート</span></button>
-</nav><div class="app-pages"><div aria-labelledby="tab-home" class="app-page" id="page-home" role="tabpanel" tabindex="0"><section class="walk-launcher" id="walkLauncher" aria-label="おさんぽへ出かける">
+</nav><div class="app-pages"><div aria-labelledby="tab-home" class="app-page" id="page-home" role="tabpanel" tabindex="0"><div class="mobile-page-switcher" data-mobile-group="home" aria-label="いっしょ画面の表示切り替え" role="tablist">
+<button type="button" class="mobile-page-chip is-active" data-mobile-section-button="home:room" role="tab" aria-selected="true">おへや</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="home:pet" role="tab" aria-selected="false">ふれあい</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="home:walk" role="tab" aria-selected="false">おさんぽ</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="home:today" role="tab" aria-selected="false">ひとこと</button>
+</div><p class="mobile-page-switcher-help">スマホでは、よく使う内容だけを切り替えて見られます。</p><section class="walk-launcher" id="walkLauncher" aria-label="おさんぽへ出かける" data-mobile-panel-group="home" data-mobile-panel="walk">
 <div class="section-heading"><h2>おさんぽに出かける</h2><span>街・海・山</span></div>
 <p class="walk-guide">この子と、いつもと違う景色を見に行きませんか？ 散歩中も自由に歩き回ります。</p>
 <div class="walk-destinations" id="walkDestinations">
@@ -54,7 +59,7 @@
 </div>
 <div class="walk-collection" id="walkCollection">まだお散歩のお土産はありません。</div>
 </section>
-<section class="walk-session" id="walkSession" hidden aria-label="ペットとのおさんぽ">
+<section class="walk-session" id="walkSession" hidden aria-label="ペットとのおさんぽ" data-mobile-panel-group="home" data-mobile-panel="walk">
 <div class="walk-header"><div><p class="eyebrow">A LITTLE WALK</p><h2 id="walkTitle">海辺</h2></div><button class="quiet-button" id="walkReturnBtn" type="button">⌂ おうちに帰る</button></div>
 <div class="walk-weather" id="walkWeather">晴れの日のおさんぽ</div>
 <div class="walk-scene" id="walkScene"><canvas id="walkCanvas" width="320" height="200" tabindex="0" aria-label="おさんぽ中の風景。ペットをタップ・なぞるとなでられます。景色をタップするとそこへ誘えます"></canvas></div>
@@ -65,7 +70,7 @@
 <div class="walk-actions"><button id="walkPetBtn" class="quiet-button" type="button">♡ そっとなでる</button><button id="walkObserveBtn" class="quiet-button" type="button">☼ 見守る</button></div>
 <p class="walk-help" id="walkHelp">探索先での仕草は性格・天気・経験で変わります。タップで誘うこともでき、いつでも帰宅できます。</p>
 </section>
-<section aria-label="ペットのいる部屋" class="room-card">
+<section aria-label="ペットのいる部屋" class="room-card" data-mobile-panel-group="home" data-mobile-panel="room">
 <div class="room-scene" id="roomScene">
 <div class="weather-label" id="weatherLabel">窓の外は晴れ</div>
 <div aria-live="polite" class="thought" id="thought">…？</div>
@@ -86,7 +91,7 @@
 <button class="quiet-button" id="callBtn">名前を呼ぶ</button>
 </div>
 <p class="pet-touch-help" id="petTouchHelp" role="status">ペットをタップ、または指でそっとなぞってみましょう。</p>
-</section><section class="pet-panel">
+</section><section class="pet-panel" data-mobile-panel-group="home" data-mobile-panel="pet">
 <div class="pet-heading">
 <div><p class="eyebrow">YOUR LITTLE ROOMMATE</p><h2 id="petNameHeading">モフリ</h2><p class="subline" id="petIntro">仕草を眺めて、この子のことを知っていきましょう。</p></div>
 <button aria-label="名前を変える" class="icon-button" id="renameBtn" title="名前を変える">✎</button>
@@ -95,16 +100,29 @@
 <div class="signal"><span class="signal-icon">☾</span><span id="sleepSignal">目を開けて辺りを見ている</span></div>
 <div class="signal"><span class="signal-icon">♡</span><span id="moodSignal">自分のペースで過ごしている</span></div>
 </div>
+<section class="social-request-panel" id="socialRequestPanel" aria-label="ペットからのおさそい" hidden>
+  <div class="social-request-head"><span class="social-request-icon" aria-hidden="true">♡</span><strong id="socialRequestTitle">こちらを見ています</strong></div>
+  <p class="social-request-description" id="socialRequestDescription" role="status">何か伝えたいようです。</p>
+  <div class="social-request-controls"><button class="quiet-button" type="button" id="socialRequestAnswer">お誘いに応える</button></div>
+  <div class="social-walk-choices" id="socialWalkChoices" hidden aria-label="行きたいお散歩先">
+    <button type="button" data-social-walk="town">街</button><button type="button" data-social-walk="sea">海</button><button type="button" data-social-walk="mountain">山</button>
+  </div>
+  <p class="social-request-footnote">返事は急がなくても大丈夫。待っている間の仕草も眺めてみましょう。</p>
+</section>
 <div class="actions">
 <button class="action-button" id="foodBtn"><span class="action-emoji">🍎</span><span>食べ物を置く</span></button>
 <button class="action-button" id="playBtn"><span class="action-emoji">🧶</span><span>遊びに誘う</span></button>
 <button class="action-button" id="petBtn"><span class="action-emoji">✋</span><span>そっと近づく</span></button>
 <button class="action-button" id="strokePetBtn"><span class="action-emoji">♡</span><span>そっとなでる</span></button>
 </div>
-</section><section aria-label="今日の小さな発見" class="today-panel">
+</section><section aria-label="今日の小さな発見" class="today-panel" data-mobile-panel-group="home" data-mobile-panel="today">
 <div class="section-heading"><h2>今日のひとこと</h2><button class="text-route" data-open-app-tab="notes" type="button">ノートへ →</button></div>
 <p id="todayHighlight">この子は今日も、自分のペースで過ごしています。</p>
-</section></div><div aria-labelledby="tab-room" class="app-page" hidden="" id="page-room" role="tabpanel" tabindex="0"><div class="page-heading"><p class="eyebrow">LITTLE LIFE</p><h2>おへやを整える</h2></div><section aria-label="おへやの模様替え" class="theme-panel">
+</section></div><div aria-labelledby="tab-room" class="app-page" hidden="" id="page-room" role="tabpanel" tabindex="0"><div class="page-heading"><p class="eyebrow">LITTLE LIFE</p><h2>おへやを整える</h2></div><div class="mobile-page-switcher" data-mobile-group="room" aria-label="おへや画面の表示切り替え" role="tablist">
+<button type="button" class="mobile-page-chip is-active" data-mobile-section-button="room:theme" role="tab" aria-selected="true">テーマ</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="room:items" role="tab" aria-selected="false">家具</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="room:traces" role="tab" aria-selected="false">気配</button>
+</div><section aria-label="おへやの模様替え" class="theme-panel" data-mobile-panel-group="room" data-mobile-panel="theme">
 <div class="section-heading"><h2>おへやの模様替え</h2><span id="currentRoomTheme">洋風のおへや</span></div>
 <p class="theme-help">好きな部屋に切り替えられます。ペットや家具、思い出はそのまま引き継がれます。</p>
 <div aria-label="おへやのテーマ" class="theme-options" id="roomThemeOptions" role="group">
@@ -113,13 +131,13 @@
 <button aria-pressed="false" class="theme-choice" data-room-theme="cute" type="button"><img alt="" loading="lazy" src="assets/rooms/cute.png"/><span>🌸 可愛い</span></button>
 <button aria-pressed="false" class="theme-choice" data-room-theme="cyber" type="button"><img alt="" loading="lazy" src="assets/rooms/cyber.png"/><span>🌙 サイバー</span></button>
 </div>
-<p class="theme-status" id="roomThemeStatus" role="status">好きなおへやを選んでください。</p></section><section aria-label="部屋に置くおもちゃと家具" class="item-panel">
+<p class="theme-status" id="roomThemeStatus" role="status">好きなおへやを選んでください。</p></section><section aria-label="部屋に置くおもちゃと家具" class="item-panel" data-mobile-panel-group="room" data-mobile-panel="items">
 <div class="section-heading"><h2>おへやのもの</h2><span id="roomItemCount">配置中 2/6個</span></div>
 <p class="item-help" id="placeHint">置きたいアイテムを選ぶと、ペットのいる画面に戻ります。床をタップして場所を決めてください。</p>
 <div class="item-tray" id="itemTray"></div>
 <button class="quiet-button cancel-place" hidden="" id="cancelPlaceBtn">配置をやめる</button>
 <p class="item-footnote">最大6個まで配置できます。入れ替えるときは「しまう」。収納しても、この子が覚えた好みは消えません。</p>
-</section><section aria-label="部屋に残された暮らしの痕跡" class="room-history">
+</section><section aria-label="部屋に残された暮らしの痕跡" class="room-history" data-mobile-panel-group="room" data-mobile-panel="traces">
 <div class="section-heading"><h2>おへやの気配</h2><span>小さな変化</span></div>
 <p aria-live="polite" class="room-history-text" id="roomTraceText">静かな部屋です。どんな変化が残るでしょう？</p>
 <div class="room-history-actions">
@@ -128,12 +146,18 @@
 </div>
 <p class="room-history-hint">留守中にも部屋の様子が変わることがあります。片づけても、この子の記憶は消えません。</p>
 </section></div><div aria-labelledby="tab-fashion" class="app-page" hidden="" id="page-fashion" role="tabpanel" tabindex="0"><div class="page-heading"><p class="eyebrow">LITTLE LIFE</p><h2>ペットのおめかし</h2></div><section aria-label="ペットの頭飾りとふれあいポイント" class="wardrobe-panel">
-<div class="section-heading"><h2>おめかし屋さん</h2><span>10種類の頭飾り</span></div>
+<div class="section-heading"><h2>おめかし屋さん</h2><span id="wardrobeOwnedCount">解放済み 1 / 22</span></div>
 <div class="wardrobe-wallet">
 <div><span class="wallet-kicker">ふれあいポイント</span><strong aria-live="polite" id="bondPointBalance">0 <small>pt</small></strong></div>
-<div class="wallet-note">遊ぶ・食べる・呼びかけに応じるなど、うれしい交流で増えます。<br/>同じ交流の連続獲得には待ち時間があり、1日100ptまで。</div>
+<div class="wallet-note">遊ぶ・食べる・呼びかけに応じるなど、うれしい交流で増えます。<br/>同じ交流の連続獲得には待ち時間があり、1日100ptまで。新しい飾りも今までのポイントで解放できます。</div>
 </div>
 <p class="wardrobe-message" id="wardrobeMessage" role="status">気になる飾りを見つけてみましょう。</p>
+<div class="wardrobe-filters" role="group" aria-label="おめかしアイテムの表示条件">
+<button type="button" class="wardrobe-filter active" data-headwear-filter="all" aria-pressed="true">すべて</button>
+<button type="button" class="wardrobe-filter" data-headwear-filter="owned" aria-pressed="false">持っている</button>
+<button type="button" class="wardrobe-filter" data-headwear-filter="affordable" aria-pressed="false">解放できる</button>
+<button type="button" class="wardrobe-filter" data-headwear-filter="locked" aria-pressed="false">未解放</button>
+</div>
 <div aria-label="頭の飾りを選ぶ" class="headwear-grid" id="headwearChoices" role="group"></div>
 <div aria-label="おめかしの反応" class="fashion-habit">
 <p class="fashion-habit-title">この子のおめかしの様子</p>
@@ -142,24 +166,28 @@
 <span>お気に入りの頭飾りを、自分で選んでもらう</span></label>
 <p class="auto-fashion-help">解放済みで何度か着けた飾りだけが対象です。自分で選んでもポイントは使いません。手動で選んだ直後は変更しません。</p>
 </div>
-<p class="wardrobe-footnote">一度解放した飾りはずっと使えます。ポイントで使えるのはゲーム内アイテムだけで、購入や課金はありません。飾りをつけなくても大丈夫です。</p>
-<button class="text-route outfit-return" data-open-app-tab="home" type="button">着せ替えた姿を見る →</button></section></div><div aria-labelledby="tab-notes" class="app-page" hidden="" id="page-notes" role="tabpanel" tabindex="0"><div class="page-heading"><p class="eyebrow">LITTLE LIFE</p><h2>発見ノート</h2></div><section aria-label="ペットが落ち着く居場所" class="favorite-panel">
+<p class="wardrobe-footnote">一度解放した飾りはずっと使えます。既存の飾りの必要ポイントは未解放分のみ新価格になります。すでに解放した飾りは再購入不要です。課金はありません。</p>
+<button class="text-route outfit-return" data-open-app-tab="home" type="button">着せ替えた姿を見る →</button></section></div><div aria-labelledby="tab-notes" class="app-page" hidden="" id="page-notes" role="tabpanel" tabindex="0"><div class="page-heading"><p class="eyebrow">LITTLE LIFE</p><h2>発見ノート</h2></div><div class="mobile-page-switcher" data-mobile-group="notes" aria-label="発見ノート画面の表示切り替え" role="tablist">
+<button type="button" class="mobile-page-chip is-active" data-mobile-section-button="notes:habits" role="tab" aria-selected="true">習慣</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="notes:personality" role="tab" aria-selected="false">個性</button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="notes:journal" role="tab" aria-selected="false">思い出</button>
+</div><section aria-label="ペットが落ち着く居場所" class="favorite-panel" data-mobile-panel-group="notes" data-mobile-panel="habits">
 <div class="section-heading"><h2>いつもの居場所</h2><span>この子の習慣</span></div>
 <p class="favorite-text" id="favoritePlaceText">まだ、部屋のあちこちを試しているようです。</p>
 <p class="favorite-hint">気持ちは数字ではなく、何度も戻る仕草から少しずつわかります。家具を動かしても、その子の思い出は残ります。</p>
 <button class="quiet-button favorite-story-button" id="favoriteStoryBtn" type="button">この場所の思い出を読む ↓</button>
-</section><section aria-label="思い出から生まれる生活習慣" class="memory-panel">
+</section><section aria-label="思い出から生まれる生活習慣" class="memory-panel" data-mobile-panel-group="notes" data-mobile-panel="habits">
 <div class="section-heading"><h2>思い出のつづき</h2><span>経験がつながる</span></div>
 <p id="memoryHabitText">一緒に過ごした経験が、次の行動につながるかもしれません。</p>
-</section><section aria-label="なでられることの思い出" class="petting-memory-panel"><div class="section-heading"><h2>なでられた日のこと</h2><span>ふれあいの記憶</span></div><p id="pettingHabitText">まだ、なでられたときにどう感じるかはわかりません。</p></section><section aria-label="まだ知らないひみつの癖" class="secret-panel">
+</section><section aria-label="なでられることの思い出" class="petting-memory-panel" data-mobile-panel-group="notes" data-mobile-panel="habits"><div class="section-heading"><h2>なでられた日のこと</h2><span>ふれあいの記憶</span></div><p id="pettingHabitText">まだ、なでられたときにどう感じるかはわかりません。</p></section><section aria-label="まだ知らないひみつの癖" class="secret-panel" data-mobile-panel-group="notes" data-mobile-panel="habits">
 <div class="section-heading"><h2>この子だけのひみつ</h2><span>観察して発見</span></div>
 <p id="secretHabitText">いつか、この子だけの不思議な癖が見つかるかもしれません。</p>
 <p class="secret-footnote">何もしない時間にも、新しい行動が現れることがあります。小石やクッションを置くと見られる癖もあります。</p>
-</section><section class="personality-panel" aria-label="観察してわかったこの子らしさ">
+</section><section class="personality-panel" aria-label="観察してわかったこの子らしさ" data-mobile-panel-group="notes" data-mobile-panel="personality">
 <div class="section-heading"><h2>この子らしさ</h2><span>行動から知る個性</span></div>
 <div id="personalityHint" class="personality-hints" aria-live="polite">まだこの子のことを観察しているところです。</div>
 <p class="personality-note">性格を決めつける診断ではなく、何度か見られた行動からの小さな気づきです。隠れた数値は表示しません。</p>
-</section><section class="bottom-panel" id="discoveryNotebook">
+</section><section class="bottom-panel" id="discoveryNotebook" data-mobile-panel-group="notes" data-mobile-panel="journal">
 <div class="section-heading"><h2>発見ノート</h2><span id="discoveryCount">0件</span></div>
 <p id="discoveryText">ペットの行動を観察すると、少しずつこの子のことがわかります。</p>
 <div aria-label="ペットの暮らしと交流の思い出" class="place-journal">

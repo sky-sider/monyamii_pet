@@ -285,3 +285,75 @@ footer{padding-top:18px;line-height:1.7}
 .item-store:focus-visible{outline:3px solid #82977b;outline-offset:2px}
 @media(min-width:600px){.item-tray{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:360px){.item-tray{gap:7px}.item-slot .item-choice{min-height:96px}}
+
+/* v21: お誘いがあるときだけ現れる静かな交流エリア */
+.social-request-panel{margin:14px 0 4px;padding:14px;background:#f5eee3;border:1px solid #e2c9af;border-radius:14px;animation:requestFade .25s ease-out}
+.social-request-panel[hidden],.social-walk-choices[hidden]{display:none!important}
+.social-request-head{display:flex;align-items:center;gap:8px;color:#6b594b;font-size:14px}
+.social-request-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff9f0;color:#bb8380}
+.social-request-description{line-height:1.7;margin:8px 0 10px;font-size:13px}
+.social-request-controls{display:flex;flex-wrap:wrap;gap:8px}
+.social-request-controls button{min-height:44px;background:#fffdf7;border:1px solid #dcbfa3;font-weight:700}
+.social-walk-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.social-walk-choices button{min-height:43px;border:1px solid #d7c5ae;border-radius:9px;background:#fff9ef;color:#51483d;font-weight:700}
+.social-request-footnote{margin:10px 0 0;color:#867b6d;font-size:11px;line-height:1.6}
+@keyframes requestFade{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* v22: 22種類のおめかしを見つけやすくする絞り込み */
+.wardrobe-filters{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 13px}
+.wardrobe-filter{min-height:39px;padding:8px 11px;border:1px solid #dfd2bf;border-radius:999px;background:#f8f3e9;color:#695e50;font-size:12px;font-weight:700;cursor:pointer}
+.wardrobe-filter[aria-pressed="true"]{background:#e7f0e2;border-color:#9ab795;color:#496e50}
+.wardrobe-filter:focus-visible{outline:3px solid #82977b;outline-offset:2px}
+.wardrobe-empty{grid-column:1/-1;color:#736959;font-size:12px;line-height:1.7;padding:18px 12px;margin:0;background:#f8f4eb;border:1px dashed #dfd2bf;border-radius:12px}
+@media(max-width:370px){.wardrobe-filter{font-size:11px;padding:8px 9px}}
+
+
+/* v23: スマホ優先の画面リニューアル */
+
+.topbar{position:sticky;top:0;z-index:55;background:linear-gradient(180deg,rgba(245,241,232,.97),rgba(245,241,232,.88));backdrop-filter:blur(10px);padding-top:max(6px,env(safe-area-inset-top));}
+.mobile-page-switcher-help{display:none;margin:0 2px 10px;color:var(--muted);font-size:12px;line-height:1.65}
+.mobile-page-switcher{display:none}
+@media(max-width:649px){
+  .app-pages{display:grid;gap:12px}
+  .page-heading{margin-bottom:10px}
+  .mobile-page-switcher-help{display:block}
+  .mobile-page-switcher{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 1px 4px;scrollbar-width:none;position:sticky;top:74px;z-index:35;background:linear-gradient(180deg,rgba(245,241,232,.98),rgba(245,241,232,.92));margin:0 0 8px}
+  .mobile-page-switcher::-webkit-scrollbar{display:none}
+  .mobile-page-chip{flex:0 0 auto;border:1px solid #ddd3c4;background:#fffaf2;color:#6a5f50;border-radius:999px;padding:9px 13px;min-height:40px;font-size:12px;font-weight:800;box-shadow:0 1px 4px rgba(66,56,43,.06)}
+  .mobile-page-chip.is-active,.mobile-page-chip[aria-selected="true"]{background:#e7f0e2;border-color:#9db598;color:#4f6d53}
+  [data-mobile-panel-group][data-mobile-panel]{display:none}
+  [data-mobile-panel-group][data-mobile-panel].is-mobile-panel-active{display:block}
+  #page-home.walk-active .mobile-page-switcher{display:none}
+  #page-home.walk-active [data-mobile-panel-group="home"][data-mobile-panel="walk"]{display:block}
+  .walk-launcher,.walk-session,.room-card,.pet-panel,.today-panel,.theme-panel,.item-panel,.room-history,.wardrobe-panel,.favorite-panel,.memory-panel,.petting-memory-panel,.secret-panel,.personality-panel,.bottom-panel{margin-top:0}
+  .room-card,.pet-panel,.today-panel,.walk-launcher,.walk-session,.theme-panel,.item-panel,.room-history,.wardrobe-panel,.favorite-panel,.memory-panel,.petting-memory-panel,.secret-panel,.personality-panel,.bottom-panel{border-radius:18px}
+  .pet-panel{padding:15px}
+  .signals{display:grid;grid-template-columns:1fr;gap:7px}
+  .actions{position:sticky;bottom:72px;z-index:20;background:linear-gradient(180deg,rgba(255,252,246,0),rgba(255,252,246,.94) 22%,rgba(255,252,246,.99));padding-top:10px;padding-bottom:6px;margin-top:8px}
+  .action-button{min-height:66px;border-radius:16px}
+  .social-request-panel{margin-top:10px}
+  .room-tools{display:grid;grid-template-columns:1fr 1fr}
+  .walk-destinations{grid-template-columns:1fr;gap:10px}
+  .walk-destinations button{display:grid;grid-template-columns:92px 1fr;grid-template-rows:auto auto;align-items:center;column-gap:10px;padding:8px 10px 8px 8px;text-align:left}
+  .walk-destinations button img{grid-row:1 / span 2;width:92px;aspect-ratio:8/5}
+  .walk-destinations button strong{align-self:end;font-size:13px}
+  .walk-destinations button span{align-self:start;font-size:11px}
+  .theme-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .item-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .headwear-grid{grid-template-columns:1fr}
+  .headwear-card{grid-template-columns:56px 1fr auto;align-items:center;text-align:left;padding:10px 10px 10px 8px}
+  .headwear-card .headwear-icon{width:50px;height:42px}
+  .headwear-details{text-align:left}
+  .headwear-action{min-width:74px}
+  .wardrobe-wallet{display:grid;gap:10px}
+  .wardrobe-wallet strong{font-size:28px}
+  .wardrobe-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}
+  .wardrobe-filters::-webkit-scrollbar{display:none}
+  .wardrobe-filter{flex:0 0 auto}
+  .journal-entry{padding:13px 12px}
+  .log{max-height:220px}
+  footer{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+}
+@media(min-width:650px){
+  .mobile-page-switcher,.mobile-page-switcher-help{display:none!important}
+}
