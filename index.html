@@ -56,6 +56,11 @@
 <button type="button" data-walk-place="mountain"><img src="assets/walks/mountain.png" alt="木々と小川のある山の小道"/><strong>山の小道</strong><span>木の実と葉っぱ</span></button>
 </div>
 <div class="walk-collection" id="walkCollection">まだお散歩のお土産はありません。</div>
+<details class="souvenir-album" id="souvenirAlbum">
+<summary><span>おみやげ図鑑</span><small id="souvenirAlbumCount">0 / 18種類を発見</small></summary>
+<p class="souvenir-album-help">見つけた宝物だけ名前がわかります。季節や天気で出会いやすさが少し変わることも。</p>
+<div id="souvenirAlbumGrid" class="souvenir-album-grid" aria-label="お散歩で見つけた宝物の図鑑"></div>
+</details>
 </section>
 <section class="walk-session" id="walkSession" hidden aria-label="ペットとのおさんぽ" data-mobile-panel-group="home" data-mobile-panel="walk">
 <div class="walk-header"><div><p class="eyebrow">A LITTLE WALK</p><h2 id="walkTitle">海辺</h2></div><button class="quiet-button" id="walkReturnBtn" type="button"><img alt="" aria-hidden="true" class="inline-mini-icon" src="assets/ui-icons/house.png"/>おうちに帰る</button></div>
@@ -74,6 +79,9 @@
 <div aria-live="polite" class="thought" id="thought">…？</div>
 <canvas aria-label="ペットと家具がある部屋。ペットをタップまたはなぞってなでられます。家具の配置中はタップで位置を決定" height="200" id="petCanvas" tabindex="0" width="320"></canvas>
 <div class="room-caption" id="roomCaption">部屋の隅で、小さな物音がしました。</div>
+</div><div class="treasure-shelf-strip" aria-label="おへやの宝物の飾り棚">
+  <span id="treasureShelfStatus">飾り棚はまだ空っぽ。もらった宝物を飾れます。</span>
+  <button type="button" id="openGiftShelfBtn" class="treasure-shelf-link">贈りものを選ぶ →</button>
 </div><details class="weather-disclosure"><summary><span aria-hidden="true">☀</span><strong id="weatherNow">秋の晴れ</strong><span class="weather-summary-action">空模様のくわしい様子 <span aria-hidden="true">⌄</span></span></summary><div aria-label="おへやの天気と季節" class="weather-panel">
 
 <p id="weatherDescription">窓の向こうの空を眺めています。</p>
@@ -101,7 +109,7 @@
 <section class="social-request-panel" id="socialRequestPanel" aria-label="ペットからのおさそい" hidden>
   <div class="social-request-head"><span class="social-request-icon" aria-hidden="true">♡</span><strong id="socialRequestTitle">こちらを見ています</strong></div>
   <p class="social-request-description" id="socialRequestDescription" role="status">何か伝えたいようです。</p>
-  <div class="social-request-controls"><button class="quiet-button" type="button" id="socialRequestAnswer">お誘いに応える</button></div>
+  <div class="social-request-controls"><button class="quiet-button" type="button" id="socialRequestAnswer">お誘いに応える</button><button class="quiet-button" type="button" id="socialGiftObserve" hidden>そっと見守る</button></div>
   <div class="social-walk-choices" id="socialWalkChoices" hidden aria-label="行きたいお散歩先">
     <button type="button" data-social-walk="town">街</button><button type="button" data-social-walk="sea">海</button><button type="button" data-social-walk="mountain">山</button>
   </div>
@@ -128,6 +136,10 @@
 <button aria-pressed="false" class="theme-choice" data-room-theme="japanese" type="button"><img alt="" loading="lazy" src="assets/rooms/japanese.png"/><span>🍵 和風</span></button>
 <button aria-pressed="false" class="theme-choice" data-room-theme="cute" type="button"><img alt="" loading="lazy" src="assets/rooms/cute.png"/><span>🌸 可愛い</span></button>
 <button aria-pressed="false" class="theme-choice" data-room-theme="cyber" type="button"><img alt="" loading="lazy" src="assets/rooms/cyber.png"/><span>🌙 サイバー</span></button>
+<button aria-pressed="false" class="theme-choice" data-room-theme="forest" type="button"><img alt="" loading="lazy" src="assets/rooms/forest.png"/><span>🌲 森の小屋</span></button>
+<button aria-pressed="false" class="theme-choice" data-room-theme="magic" type="button"><img alt="" loading="lazy" src="assets/rooms/magic.png"/><span>🔮 魔法使いのおへや</span></button>
+<button aria-pressed="false" class="theme-choice" data-room-theme="ocean" type="button"><img alt="" loading="lazy" src="assets/rooms/ocean.png"/><span>🌊 海の見えるおへや</span></button>
+<button aria-pressed="false" class="theme-choice" data-room-theme="starry" type="button"><img alt="" loading="lazy" src="assets/rooms/starry.png"/><span>✨ 星降るおへや</span></button>
 </div>
 <p class="theme-status" id="roomThemeStatus" role="status">好きなおへやを選んでください。</p></section><section aria-label="部屋に置くおもちゃと家具" class="item-panel" data-mobile-panel-group="room" data-mobile-panel="items">
 <div class="section-heading"><h2>おへやのもの</h2><span id="roomItemCount">配置中 2/6個</span></div>
@@ -169,6 +181,7 @@
 <button type="button" class="mobile-page-chip is-active" data-mobile-section-button="notes:habits" role="tab" aria-selected="true"><img alt="" aria-hidden="true" class="chip-illustration" src="assets/ui-icons/paw.png"/><span>習慣</span></button>
 <button type="button" class="mobile-page-chip" data-mobile-section-button="notes:personality" role="tab" aria-selected="false"><img alt="" aria-hidden="true" class="chip-illustration" src="assets/ui-icons/star.png"/><span>個性</span></button>
 <button type="button" class="mobile-page-chip" data-mobile-section-button="notes:journal" role="tab" aria-selected="false"><img alt="" aria-hidden="true" class="chip-illustration" src="assets/ui-icons/notebook.png"/><span>思い出</span></button>
+<button type="button" class="mobile-page-chip" data-mobile-section-button="notes:backup" role="tab" aria-selected="false"><img alt="" aria-hidden="true" class="chip-illustration" src="assets/ui-icons/sliders.png"/><span>保存</span></button>
 </div><div class="notes-left-column">
 <section aria-label="ペットが落ち着く居場所" class="favorite-panel" data-mobile-panel-group="notes" data-mobile-panel="habits">
 <div class="section-heading"><h2>いつもの場所</h2><span>この子の習慣</span></div>
@@ -186,10 +199,54 @@
 <div class="section-heading"><h2>この子らしさ</h2><span>行動から知る個性</span></div>
 <div id="personalityHint" class="personality-hints" aria-live="polite">まだこの子のことを観察しているところです。</div>
 <p class="personality-note">性格を決めつける診断ではなく、何度か見られた行動からの小さな気づきです。隠れた数値は表示しません。</p>
+</section>
+<section class="backup-panel" aria-labelledby="backupPanelTitle" data-mobile-panel-group="notes" data-mobile-panel="backup">
+<div class="section-heading"><h2 id="backupPanelTitle">大切な記録を守る</h2><span>バックアップ</span></div>
+<p class="backup-help">この子との暮らしを、JSONファイルに保存できます。別のブラウザや端末への引っ越しにも使えます。</p>
+<div class="backup-block">
+  <h3>① 今の記録を書き出す</h3>
+  <p>名前・性格・思い出・おさんぽ・宝物・家具・おめかし・ポイントをまとめて保存します。</p>
+  <button type="button" class="primary-button backup-main-button" id="backupExportBtn">バックアップを書き出す</button>
+  <p class="backup-status" id="backupExportStatus" role="status" aria-live="polite"></p>
+</div>
+<div class="backup-block">
+  <h3>② ファイルから記録を復元する</h3>
+  <p>復元すると、このブラウザで今育てている子の記録は置き換わります。先に①で書き出しておくと安心です。</p>
+  <label class="backup-file-label" for="backupFileInput">ファイルを選ぶ</label>
+  <input type="file" accept=".json,application/json" id="backupFileInput" class="backup-file-input" aria-describedby="backupFileName backupImportStatus"/>
+  <p class="backup-file-name" id="backupFileName">まだファイルを選んでいません</p>
+  <p class="backup-status" id="backupImportStatus" role="status" aria-live="polite">ファイルを選ぶと、内容を確認できます。選ぶだけでは復元されません。</p>
+  <div class="backup-preview" id="backupPreview" hidden>
+    <strong>読み込む記録の確認</strong>
+    <dl>
+      <div><dt>この子の名前</dt><dd id="backupPreviewName"></dd></div>
+      <div><dt>暮らした日数</dt><dd id="backupPreviewDay"></dd></div>
+      <div><dt>おへや</dt><dd id="backupPreviewRoom"></dd></div>
+      <div><dt>保存した日時</dt><dd id="backupPreviewDate"></dd></div>
+    </dl>
+    <p class="backup-warning">※ 復元すると現在の「<span id="backupCurrentName"></span>」の記録が置き換わります。</p>
+    <button type="button" class="backup-restore-button" id="backupRestoreBtn">確認して、この記録を復元する</button>
+  </div>
+</div>
+<div class="backup-safety" id="backupSafety" hidden>
+  <strong>前の記録への戻し方</strong>
+  <p id="backupSafetyDescription"></p>
+  <button type="button" class="quiet-button backup-undo-button" id="backupUndoBtn">復元前の記録に戻す</button>
+</div>
+<p class="backup-footnote">バックアップファイルは自分で保管してください。ブラウザの保存データは、設定変更やデータ削除で消える場合があります。</p>
 </section></div>
 <section class="bottom-panel" id="discoveryNotebook" data-mobile-panel-group="notes" data-mobile-panel="journal">
 <div class="section-heading"><h2>発見ノート</h2><span id="discoveryCount">0件</span></div>
 <p id="discoveryText">ペットの行動を観察すると、少しずつこの子のことがわかります。</p>
+<section class="gift-collection" aria-label="受け取った贈りものの記録">
+<div class="section-heading"><h3>もらった宝物</h3><span>ちいさな贈りもの</span></div>
+<p id="giftCollectionSummary" class="gift-collection-summary">まだ贈りものはありません。</p>
+<div class="gift-treasure-insight" aria-live="polite"><strong>この子が選びがちなもの</strong><p id="giftHabitHint">どんな宝物を選ぶのか、まだわかりません。</p></div>
+<div class="gift-decor-heading"><strong>もらった宝物と愛着</strong><span id="giftDecorCount">飾り棚 0/3</span></div>
+<p class="gift-decor-help">受け取った宝物を3種類まで飾れます。家具の配置数は使いません。しまっても思い出は消えません。</p>
+<p class="gift-decor-notice" id="giftDecorNotice" aria-live="polite"></p>
+<div id="giftCollectionList" class="gift-collection-list"></div>
+</section>
 <div aria-label="ペットの暮らしと交流の思い出" class="place-journal">
 <div class="journal-heading"><h3>暮らしと思い出</h3><span>その子だけの記録</span></div>
 <p class="journal-intro" id="placeJournalIntro">居場所・交流・お散歩・珍しい仕草を、実際に観察した日時で記録します。</p>
